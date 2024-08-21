@@ -37,3 +37,7 @@ for (const file of eventFiles) {
 }
 
 client.login(token);
+
+client.on('error', (e) => console.error(e));
+client.on('warning', (e) => console.warn(e));
+client.on('debug', (e) => console.info(e));
