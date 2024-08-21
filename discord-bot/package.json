@@ -9,7 +9,8 @@
   "author": "Penguin Squire",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.15.3"
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "eslint": "^9.9.0"
