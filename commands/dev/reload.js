@@ -12,7 +12,7 @@ module.exports = {
                 .setDescription('The command to reload.')
                 .setRequired(true)),
     async execute(interaction) {
-        if (interactionUser.user.id == 347469833685958657) {
+        if (interaction.user.id.toString() == `347469833685958657`) {
             const commandName = interaction.options.getString('command', true).toLowerCase();
             const command = interaction.client.commands.get(commandName);
 
