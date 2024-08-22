@@ -1,11 +1,11 @@
 const { SlashCommandBuilder } = require('discord.js');
-const path = require('node:path');
-const loc = path.join(__dirname, 'commands');
+//const path = require('node:path');
+//const loc = path.join(__dirname, 'commands');
 
 const thomasGif = 'https://cdn.discordapp.com/attachments/869737680727056437/1261720531477069834/gifmov.gif?ex=66c6be10&is=66c56c90&hm=e33a783d2e60a3a78234d0978817bb1b2e65d2f477f16785ddbf3725f1be18f6&'
 
 module.exports = {
-	category: loc.substring(loc.lastIndexOf('\\') + 1, loc.length).toString(),
+	//category: loc.substring(loc.lastIndexOf('\\') + 1, loc.length).toString(),
 	data: new SlashCommandBuilder()
 		.setName('image')
 		.setDescription('embeds images from links')
