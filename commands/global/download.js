@@ -88,7 +88,7 @@ module.exports = {
                 },
                 body: JSON.stringify({
                     url: encodedLink,
-                    vQuality: quality,
+                    vQuality: quality.toString(),
                     isAudioOnly: audioOnly
                 })
             })
