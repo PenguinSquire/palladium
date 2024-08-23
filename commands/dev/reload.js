@@ -14,7 +14,7 @@ module.exports = {
     async execute(interaction) {
         if (interaction.user.id.toString() == `347469833685958657`) {
             const commandName = interaction.options.getString('command', true).toLowerCase();
-            const command = interaction.client.commands.get('download');//commandName);
+            const command = interaction.client.commands.get(commandName);//commandName);
             var filePath = `../dev/${command.data.name}.js`
 
             if (!command) {

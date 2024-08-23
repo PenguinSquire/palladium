@@ -8,7 +8,8 @@ module.exports = {
 		.setName('ping')
 		.setDescription('Replies with Pong!'),
 	async execute(interaction) {
-		await interaction.reply({ content: 'Pong!',  fetchReply: true, ephemeral: false });
+		const sent = await interaction.reply({ content: 'Pinging...', fetchReply: true, ephemeral: false  });
 		interaction.editReply(`Roundtrip latency: ${sent.createdTimestamp - interaction.createdTimestamp}ms`);
+		
 	},
 };
