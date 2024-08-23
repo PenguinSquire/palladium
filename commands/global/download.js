@@ -80,7 +80,6 @@ module.exports = {
             fileLocation = "tempFiles/temp.mp3"
         if (isValidUrl(link)) {
 
-            console.log(`try ${i}`)
             const apiResponse = fetch('https://api.cobalt.tools/api/json', {
                 method: 'POST',
                 headers: {
