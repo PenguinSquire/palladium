@@ -79,6 +79,8 @@ module.exports = {
         if (audioOnly)
             fileLocation = "tempFiles/temp.mp3"
         if (isValidUrl(link)) {
+
+            console.log(`try ${i}`)
             const apiResponse = fetch('https://api.cobalt.tools/api/json', {
                 method: 'POST',
                 headers: {
@@ -99,40 +101,40 @@ module.exports = {
                     return 'Error:', err;
                 });
             const textResponse = async () => {
-                try {
-                    const stringResponse = JSON.parse(await apiResponse)
-                    console.log("different status? " + stringResponse["text"])
-                    console.log("status: " + stringResponse["status"])
-                    console.log("url: " + stringResponse['url'])
-                    if (stringResponse["status"] == 'success' || stringResponse['status'] == 'stream' || apiResponse['status'] == "redirect") {
-                        if (stringResponse['status'] == "redirect" || stringResponse['status'] == "ok") {
-                            failure = false
-                            return 'redirect: ', stringResponse['url'];
-                        } else {
+                for (var i = 1; i <= 3; i++) {
+                    try {
+                        const stringResponse = JSON.parse(await apiResponse)
+                        console.log("status: " + stringResponse["status"])
+                        console.log("url: " + stringResponse['url'])
+                        if (stringResponse["status"] == 'success' || stringResponse['status'] == 'stream' || stringResponse['status'] == "redirect") {
                             await downloadVideo(stringResponse['url'])
                             failure = false
                             return 'Success!'
-
+                        } else {
+                            console.warn(`Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
+                            if (stringResponse['text'].includes("i couldn't process your request"))
+                                return `Cobalt couldn't handle your request. Are you sure it's a valid link?`;
+                            else if (stringResponse['text'].includes("something went wrong when i" && i !== 3))
+                                continue
+                            else if (stringResponse['text'].includes("something went wrong when i" && i == 3))
+                                return `Tried ${i} times. Cobalt didn't like your link`
+                            else
+                                return `Cobalt API returned ${stringResponse['status']}: ${stringResponse['text']}`
                         }
-                    } else {
-                        console.warn(`Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
-                        if (stringResponse['text'].includes("i couldn't process your request"))
-                            return `Cobalt couldn't handle your request. Are you sure it's a valid link?`;
-                        else
-                            return `Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`
+                    }
+                    catch (error) {
+                        console.log(error)
+                        return "i dont know what you just did but it broke my bot please dont do it again"
                     }
                 }
-                catch (error) {
-                    console.log(error)
-                    return "i dont know what you just did but it broke my bot please dont do it again"
-                }
+                return "my \`for\` loop broke somehow :((("
 
             };
             reply = await textResponse()
             //console.log("reply: " + reply)
             const file = new AttachmentBuilder(fileLocation);
             if (!failure) {
-                await interaction.editReply({ content: reply, files: [file] });
+                await interaction.editReply({ files: [file] });
 
                 fs.unlink(fileLocation, function (err) {
                     if (err && err.code == 'ENOENT') {
@@ -150,11 +152,5 @@ module.exports = {
             }
         } else
             await interaction.editReply(`\"${link}\" is not a valid link`);
-
-
-        //setTimeout(async () => {
-        //    await interaction.editReply(thomasGif);
-        //}, 3000);
-        //await interaction.followUp({ content: 'the actual video', ephemeral: false });
     },
 };
