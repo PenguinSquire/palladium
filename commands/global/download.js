@@ -61,18 +61,23 @@ module.exports = {
                     { name: '2160p', value: '2160' },
                     { name: 'max', value: 'max' },
                 )),
-
+    
+    //bot response start
     async execute(interaction) {
+        //defer gives you more than 3 seconds to return the response
         await interaction.deferReply({ ephemeral: false });
 
+        //parse all the user choices
         const link = interaction.options.getString('link');
         const encodedLink = encodeURI(link); // cobalt requires links to be sent as URI
 
         const audioOnly = interaction.options.getBoolean('audio-only') ?? false;
         const quality = interaction.options.getString('quality') ?? '720';
 
+        //default values in case nothing changes them
         let reply = 'i dont know what went wrong';
         failure = true;
+        
         if (audioOnly)
             fileLocation = "tempFiles/temp.mp3"
         if (isValidUrl(link)) {
@@ -97,19 +102,22 @@ module.exports = {
                     return 'Error:', err;
                 });
             const textResponse = async () => {
+                //try 3 times to download if cobalt returns the "try again" error code
                 for (var i = 1; i <= 3; i++) {
                     try {
                         const stringResponse = JSON.parse(await apiResponse)
                         console.log("status: " + stringResponse["status"])
                         console.log("url: " + stringResponse['url'])
+                        //all the non-fail API responses
                         if (stringResponse["status"] == 'success' || stringResponse['status'] == 'stream' || stringResponse['status'] == "redirect") {
                             await downloadVideo(stringResponse['url'])
                             failure = false
                             return 'Success!'
-                        } else {
+                        } else { // all the Cobalt API error catching
                             console.warn(`Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
                             if (stringResponse['text'].includes("i couldn't process your request"))
                                 return `Cobalt couldn't handle your request. Are you sure it's a valid link?`;
+                            //the two sections where you probably just need to retry
                             else if (stringResponse['text'].includes("something went wrong when i" && i !== 3))
                                 continue
                             else if (stringResponse['text'].includes("something went wrong when i" && i == 3))
@@ -118,11 +126,12 @@ module.exports = {
                                 return `Cobalt API returned ${stringResponse['status']}: ${stringResponse['text']}`
                         }
                     }
-                    catch (error) {
+                    catch (error) { //try catch around the entire bot lets goooo
                         console.log(error)
                         return "i dont know what you just did but it broke my bot please dont do it again"
                     }
                 }
+                //im desperately hoping that this never works but i dont have a reliable way to test the "try again" part
                 return "my \`for\` loop broke somehow :((("
 
             };
@@ -130,8 +139,10 @@ module.exports = {
             //console.log("reply: " + reply)
             const file = new AttachmentBuilder(fileLocation);
             if (!failure) {
+                //embeds the newly downloaded video; i dont know what happens if its too large
                 await interaction.editReply({ files: [file] });
-
+                
+                //deletes temp file
                 fs.unlink(fileLocation, function (err) {
                     if (err && err.code == 'ENOENT') {
                         // file doens't exist
@@ -143,10 +154,10 @@ module.exports = {
                         console.info(`removed`);
                     }
                 });
-            } else {
+            } else { //something failed; print error message
                 await interaction.editReply({ content: reply });
             }
-        } else
+        } else // skip everything if it isnt even a link
             await interaction.editReply(`\"${link}\" is not a valid link`);
     },
 };
