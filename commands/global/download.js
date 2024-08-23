@@ -1,8 +1,6 @@
 const { AttachmentBuilder, SlashCommandBuilder } = require('discord.js');
 const http = require('https'); // or 'https' for https:// URLs
 const fs = require('fs');
-//const path = require('node:path');
-//const loc = path.join(__dirname, 'commands');
 
 let failure
 let fileLocation = "tempFiles/temp.mp4"
@@ -36,7 +34,6 @@ function isValidUrl(string) {
 }
 
 module.exports = {
-    //category: loc.substring(loc.lastIndexOf('\\') + 1, loc.length).toString(),
     data: new SlashCommandBuilder()
         .setName('download')
         .setDescription('embeds images from links')
