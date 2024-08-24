@@ -34,6 +34,7 @@ function isValidUrl(string) {
 }
 
 module.exports = {
+    dm_permission: true,
     data: new SlashCommandBuilder()
         .setName('download')
         .setDescription('embeds images from links')
@@ -50,6 +51,7 @@ module.exports = {
 
         .addStringOption(option =>
             option.setName('quality')
+
                 .setDescription('If media needs a lower quality to be uploaded')
                 .addChoices(
                     { name: '144p', value: '144' },
