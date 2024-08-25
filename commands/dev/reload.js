@@ -1,4 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
+const fs = require('node:fs');
+const path = require('node:path');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,8 +21,9 @@ module.exports = {
             }
             var reply = 'uhoh'
 
-            const foldersPath = path.join(__dirname, 'commands');
-            const commandFolders = fs.readdirSync(foldersPath);
+            const commandFolders = fs.readdirSync(path.join(__dirname, "../"));
+            console.log(`command Folders: ${commandFolders}`);
+            console.log(commandFolders.length)
             for (const folder of commandFolders) {
                 filePath = `../${folder}/${command.data.name}.js`
                 try {
@@ -31,11 +34,12 @@ module.exports = {
                     reply = `Command \`${newCommand.data.name}\` was reloaded!`;
                     break;
                 } catch (error) {
-                    if (error.code !== 'MODULE_NOT_FOUND' || i == 1) {
+                    if (error.code !== 'MODULE_NOT_FOUND' || i == commandFolders.length) {
                         console.error(error);
                         reply = `There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``;
                     }
                 }
+                i++
             }
             await interaction.reply({ content: reply, ephemeral: true })
         } else
