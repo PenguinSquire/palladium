@@ -12,13 +12,17 @@ module.exports = {
         if (interaction.user.id.toString() == `347469833685958657`) {
             const commandName = interaction.options.getString('command', true).toLowerCase();
             const command = interaction.client.commands.get(commandName);//commandName);
-            var filePath = `../dev/${command.data.name}.js`
+            var filePath 
 
             if (!command) {
                 return interaction.reply({ content: `There is no command with name \`${commandName}\`!`, ephemeral: true });
             }
             var reply = 'uhoh'
-            for (let i = 0; i <= 1; i++) {
+
+            const foldersPath = path.join(__dirname, 'commands');
+            const commandFolders = fs.readdirSync(foldersPath);
+            for (const folder of commandFolders) {
+                filePath = `../${folder}/${command.data.name}.js`
                 try {
                     delete require.cache[require.resolve(filePath)];
 
@@ -32,7 +36,6 @@ module.exports = {
                         reply = `There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``;
                     }
                 }
-                filePath = `../global/${command.data.name}.js`
             }
             await interaction.reply({ content: reply, ephemeral: true })
         } else
