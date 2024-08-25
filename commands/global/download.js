@@ -34,7 +34,6 @@ function isValidUrl(string) {
 }
 
 module.exports = {
-    dm_permission: true,
     data: new SlashCommandBuilder()
         .setName('download')
         .setDescription('embeds images from links')

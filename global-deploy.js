@@ -18,6 +18,10 @@ for (const folder of commandFolders) {
 			const filePath = path.join(commandsPath, file);
 			const command = require(filePath);
 			if ('data' in command && 'execute' in command) {
+				// allows commands to also be used in DM's with other people; not sure which staement actually allows it tho :/
+				command.data.contexts = [0, 1, 2];
+				command.data.integration_types = [0, 1];
+				
 				commands.push(command.data.toJSON());
 			} else {
 				console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
