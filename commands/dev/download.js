@@ -25,6 +25,10 @@ function downloadVideo(url) {
         }, 5000);
     });
 }
+function downloadImages(pickerObject) {
+
+}
+
 
 function isValidUrl(string) {
     try {
@@ -108,7 +112,9 @@ module.exports = {
                 //try 3 times to download if cobalt returns the "try again" error code
                 for (var i = 1; i <= 3; i++) {
                     try {
-                        const stringResponse = JSON.parse(await apiResponse)
+                        const response = await apiResponse
+                        const stringResponse = JSON.parse(response.text())
+                        console.log(`string response: ${stringResponse}`)
                         status = stringResponse["status"];
                         console.log("status: " + stringResponse["status"])
                         //all the non-fail API responses
@@ -117,9 +123,9 @@ module.exports = {
                             await downloadVideo(stringResponse['url'])
                             failure = false
                             return 'Success!'
-                        //} else if (status = picker) {
-                        //    console.log("pickerType: " + stringResponse['pickerType'])
-                        //    console.log("picker: " + stringResponse['picker'])
+                        } else if (status = picker) {
+                            console.log("pickerType: " + stringResponse['pickerType'])
+                            console.log("picker: " + stringResponse['picker'])
                         } else { // all the Cobalt API error catching
                             console.warn(`Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
                             if (stringResponse['text'].includes("i couldn't process your request"))

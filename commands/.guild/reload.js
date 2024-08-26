@@ -19,7 +19,8 @@ module.exports = {
             if (!command) {
                 return interaction.reply({ content: `There is no command with name \`${commandName}\`!`, ephemeral: true });
             }
-            var reply = 'uhoh'
+            var reply = ''
+            var i = 1;
 
             const commandFolders = fs.readdirSync(path.join(__dirname, "../"));
             console.log(`command Folders: ${commandFolders}`);
@@ -31,8 +32,7 @@ module.exports = {
 
                     const newCommand = require(filePath);
                     interaction.client.commands.set(newCommand.data.name, newCommand);
-                    reply = `Command \`${newCommand.data.name}\` was reloaded!`;
-                    break;
+                    reply += `Command \`${newCommand.data.name}\` was reloaded in \`${folder}\`! \n`;
                 } catch (error) {
                     if (error.code !== 'MODULE_NOT_FOUND' || i == commandFolders.length) {
                         console.error(error);
