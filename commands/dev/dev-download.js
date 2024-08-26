@@ -62,7 +62,7 @@ function isValidUrl(string) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('dev-download')
-        .setDescription('embeds images from links')
+        .setDescription('embeds video/images from a link')
 
         .addStringOption(option =>
             option.setName('link')
