@@ -52,7 +52,6 @@ module.exports = {
 
         .addStringOption(option =>
             option.setName('quality')
-
                 .setDescription('If video media needs a lower quality to be uploaded')
                 .addChoices(
                     { name: '144p', value: '144' },

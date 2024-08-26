@@ -6,11 +6,14 @@ let failure
 let status = ''
 let fileLocation = "tempFiles/temp"
 let fileType = '.mp4'
+let totalFiles = 0
 const thomasGif = 'https://cdn.discordapp.com/attachments/869737680727056437/1261720531477069834/gifmov.gif?ex=66c6be10&is=66c56c90&hm=e33a783d2e60a3a78234d0978817bb1b2e65d2f477f16785ddbf3725f1be18f6&'
 
 function downloadVideo(url) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(fileLocation + fileType);
+        fileURL = fileLocation + fileType
+        totalFiles++
         const request = http.get(url, function (response) {
             response.pipe(file);
 
@@ -26,7 +29,27 @@ function downloadVideo(url) {
     });
 }
 function downloadImages(pickerObject) {
+    return new Promise((resolve, reject) => {
+        for (i in pickerObject) {
+            fileType = pickerObject[i].url.split(/[#?]/)[0].split('.').pop().trim();
+            const file = fs.createWriteStream(fileLocation + i + fileType);
+            const request = http.get(url, function (response) {
+                response.pipe(file);
 
+                // after download completed close filestream
+                file.on("finish", () => {
+                    file.close();
+                    console.log("Download Completed");
+                });
+            });
+
+            totalFiles++
+            console.log((pickerObject[i].url))
+        }
+        setTimeout(() => {
+            resolve();
+        }, 5000);
+    });
 }
 
 
@@ -41,7 +64,7 @@ function isValidUrl(string) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('download')
+        .setName('dev-download')
         .setDescription('embeds images from links')
 
         .addStringOption(option =>
@@ -68,7 +91,7 @@ module.exports = {
                     { name: '2160p', value: '2160' },
                     { name: 'max', value: 'max' },
                 )),
-    
+
     //bot response start
     async execute(interaction) {
         //defer gives you more than 3 seconds to return the response
@@ -84,7 +107,7 @@ module.exports = {
         //default values in case nothing changes them
         let reply = 'i dont know what went wrong';
         failure = true;
-        
+
         if (audioOnly)
             fileType = ".mp3"
         if (isValidUrl(link)) {
@@ -113,19 +136,33 @@ module.exports = {
                 for (var i = 1; i <= 3; i++) {
                     try {
                         const response = await apiResponse
-                        const stringResponse = JSON.parse(response.text())
+                        const stringResponse = JSON.parse(await response)
+                        const textResponse = await (response)
+                        console.log(`text response: ${textResponse}`)
                         console.log(`string response: ${stringResponse}`)
-                        status = stringResponse["status"];
-                        console.log("status: " + stringResponse["status"])
+                        status = stringResponse['status'];
+                        console.log("status: " + status)
                         //all the non-fail API responses
                         if (status == 'success' || status == 'stream' || status == "redirect") {
                             console.log("url: " + stringResponse['url'])
-                            await downloadVideo(stringResponse['url'])
-                            failure = false
-                            return 'Success!'
-                        } else if (status = picker) {
+                            try {
+                                await downloadVideo(stringResponse['url'])
+                                failure = false
+                                return 'Success!'
+                            } catch (videoError) {
+                                return `video download failed: ${videoError}`
+                            }
+                        } else if (status == 'picker') {
                             console.log("pickerType: " + stringResponse['pickerType'])
                             console.log("picker: " + stringResponse['picker'])
+                            try {
+                                await downloadImages(stringResponse['picker'])
+                                failure = false
+                                return ("picker? i hardly know her")
+                            } catch (imageError) {
+                                return `image download failed: ${videoError}`
+                            }
+
                         } else { // all the Cobalt API error catching
                             console.warn(`Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
                             if (stringResponse['text'].includes("i couldn't process your request"))
@@ -150,11 +187,15 @@ module.exports = {
             };
             reply = await textResponse()
             //console.log("reply: " + reply)
-            const file = new AttachmentBuilder(fileLocation);
+            let fileAttachments = `{`
+            for (let i = 1; i <= totalFiles; i++) {
+
+            }
+            const file = new AttachmentBuilder(fileLocation + i + fileType);
             if (!failure) {
                 //embeds the newly downloaded video; i dont know what happens if its too large
                 await interaction.editReply({ files: [file] });
-                
+
                 //deletes temp file
                 fs.unlink(fileLocation, function (err) {
                     if (err && err.code == 'ENOENT') {

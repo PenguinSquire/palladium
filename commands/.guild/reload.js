@@ -21,10 +21,11 @@ module.exports = {
             }
             var reply = ''
             var i = 1;
-
+            
+            await interaction.reply({ content: "reloading...", ephemeral: true })
             const commandFolders = fs.readdirSync(path.join(__dirname, "../"));
-            console.log(`command Folders: ${commandFolders}`);
-            console.log(commandFolders.length)
+            //console.log(`command Folders: ${commandFolders}`);
+            //console.log(commandFolders.length)
             for (const folder of commandFolders) {
                 filePath = `../${folder}/${command.data.name}.js`
                 try {
@@ -33,7 +34,11 @@ module.exports = {
                     const newCommand = require(filePath);
                     interaction.client.commands.set(newCommand.data.name, newCommand);
                     reply += `Command \`${newCommand.data.name}\` was reloaded in \`${folder}\`! \n`;
+                    console.log(`Command \`${newCommand.data.name}\` was reloaded in \`${folder}\``)
+                    break;
                 } catch (error) {
+                    reply += `Checked in \`${folder}\`... \n`;
+                    interaction.editReply(reply);
                     if (error.code !== 'MODULE_NOT_FOUND' || i == commandFolders.length) {
                         console.error(error);
                         reply = `There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``;
@@ -41,7 +46,7 @@ module.exports = {
                 }
                 i++
             }
-            await interaction.reply({ content: reply, ephemeral: true })
+            interaction.editReply(reply);
         } else
             await interaction.reply({ content: `you arent allowed to reload commands`, ephemeral: true });
     }
