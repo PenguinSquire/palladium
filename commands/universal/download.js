@@ -1,15 +1,12 @@
 const { AttachmentBuilder, SlashCommandBuilder } = require('discord.js');
 const http = require('https'); // or 'https' for https:// URLs
 const fs = require('fs');
-let randomInteger, failure, status, fileLocation, fileType,
-    totalFiles
 const thomasGif = 'https://cdn.discordapp.com/attachments/869737680727056437/1261720531477069834/gifmov.gif?ex=66c6be10&is=66c56c90&hm=e33a783d2e60a3a78234d0978817bb1b2e65d2f477f16785ddbf3725f1be18f6&'
 
-function downloadVideo(url) {
+function downloadVideo(url, vars) {
     return new Promise((resolve, reject) => {
-        const file = fs.createWriteStream(fileLocation + 0 + fileType);
-        fileURL = fileLocation + fileType
-        totalFiles++
+        const file = fs.createWriteStream(vars.fileLocation + 0 + vars.fileType);
+        vars.totalFiles++
         const request = http.get(url, function (response) {
             response.pipe(file);
 
@@ -18,18 +15,18 @@ function downloadVideo(url) {
                 file.close();
             });
         });
-        console.log(`${randomInteger} - ${totalFiles} Video Download Completed`);
+        console.log(`${vars.randomInteger} - ${vars.totalFiles} Video Download Completed`);
         setTimeout(() => {
             resolve();
         }, 5000);
     });
 }
-function downloadImages(pickerObject) {
+function downloadImages(pickerObject, vars) {
     return new Promise((resolve, reject) => {
         for (i in pickerObject) {
             const imageURL = pickerObject[i].url
-            fileType = '.' + imageURL.split(/[#?]/)[0].split('.').pop().trim();
-            const file = fs.createWriteStream(fileLocation + i + fileType);
+            vars.fileType = '.' + imageURL.split(/[#?]/)[0].split('.').pop().trim();
+            const file = fs.createWriteStream(vars.fileLocation + i + vars.fileType);
             const request = http.get(imageURL, function (response) {
                 response.pipe(file);
 
@@ -39,10 +36,10 @@ function downloadImages(pickerObject) {
                 });
             });
 
-            totalFiles = parseInt(i) + 1
-            //console.log((`${i} / ${totalFiles} - ${pickerObject[i].url}`))
+            vars.totalFiles = parseInt(i) + 1
+            //console.log((`${i} / ${vars.totalFiles} - ${pickerObject[i].url}`))
         }
-        console.log(`${randomInteger} - ${totalFiles} Image Downloads Completed`);
+        console.log(`${vars.randomInteger} - ${vars.totalFiles} Image Downloads Completed`);
         setTimeout(() => {
             resolve();
         }, 5000);
@@ -94,13 +91,16 @@ module.exports = {
         //defer gives you more than 3 seconds to return the response
         await interaction.deferReply({ ephemeral: false });
 
-        randomInteger = Math.floor(Math.random() * 100000000);
-        failure = true;
-        status = ''
-        fileLocation = `tempFiles/${randomInteger}_temp`
-        fileType = '.mp4'
-        totalFiles = 0
-        let reply = 'i dont know what went wrong';
+        const randInt = Math.floor(Math.random() * 100000000);
+        let nugget = {
+            randomInteger: randInt,
+            failure: true,
+            APIstatus: '',
+            fileLocation: `tempFiles/${randInt}_temp`,
+            fileType: '.mp4',
+            totalFiles: 0,
+            reply: 'i dont know what went wrong'
+        };
 
         //parse all the user choices
         const link = interaction.options.getString('link');
@@ -112,7 +112,7 @@ module.exports = {
         //default values in case nothing changes them
         try {
             if (audioOnly)
-                fileType = ".mp3"
+                nugget.fileType = ".mp3"
             if (isValidUrl(link)) {
 
                 const apiResponse = fetch('https://api.cobalt.tools/api/json', {
@@ -131,7 +131,7 @@ module.exports = {
                         return fetchResponse.text()
                     })
                     .catch(err => {
-                        console.error(`${randomInteger} Error:`, err);
+                        console.error(`${nugget.randomInteger} Error:`, err);
                         return 'Error:', err;
                     });
                 const textResponse = async () => {
@@ -142,33 +142,33 @@ module.exports = {
                         const textResponse = await (response)
                         //console.log(`text response: ${textResponse}`)
                         //console.log(`string response: ${stringResponse}`)
-                        status = stringResponse['status'];
+                        nugget.APIstatus = stringResponse['status'];
                         //console.log("status: " + status)
                         //all the non-fail API responses
-                        if (status == 'success' || status == 'stream' || status == "redirect") {
+                        if (nugget.APIstatus == 'success' || nugget.APIstatus == 'stream' || nugget.APIstatus == "redirect") {
                             //console.log("url: " + stringResponse['url'])
                             try {
-                                await downloadVideo(stringResponse['url'])
-                                failure = false
+                                await downloadVideo(stringResponse['url'], nugget)
+                                nugget.failure = false
                                 return 'Success!'
                             } catch (videoError) {
-                                console.error(`${randomInteger} Video Error:`, videoError)
+                                console.error(`${nugget.randomInteger} Video Error:`, videoError)
                                 return `video download failed: ${videoError}`
                             }
-                        } else if (status == 'picker') {
+                        } else if (nugget.APIstatus == 'picker') {
                             //console.log("pickerType: " + stringResponse['pickerType'])
                             //console.log("picker: " + stringResponse['picker'])
                             try {
-                                await downloadImages(stringResponse['picker'])
-                                failure = false
+                                await downloadImages(stringResponse['picker'], nugget)
+                                nugget.failure = false
                                 return ("picker? i hardly know her")
                             } catch (imageError) {
-                                console.error(`${randomInteger} Image Error:`, imageError)
+                                console.error(`${nugget.randomInteger} Image Error:`, imageError)
                                 return `image download failed: ${imageError}`
                             }
 
                         } else { // all the Cobalt API error catching
-                            console.warn(`${randomInteger} Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
+                            console.warn(`${nugget.randomInteger} Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
                             if (stringResponse['text'].includes("i couldn't process your request"))
                                 return `Cobalt couldn't handle your request. Are you sure it's a valid link?`;
                             //the two sections where you probably just need to retry
@@ -184,18 +184,19 @@ module.exports = {
                     return "my \`for\` loop broke somehow :((("
 
                 };
-                reply = await textResponse()
-                //console.log("reply: " + reply)
+                nugget.reply = await textResponse()
+                //console.log("reply: " + nugget.reply)
                 let fileAttachments = [];
                 let tempArray = [];
                 let h = 0;
                 let j = 0;
-                for (let i = 0; i < totalFiles; i++) {
-                    tempArray[j] = new AttachmentBuilder(fileLocation + i + fileType);
+                for (let i = 0; i < nugget.totalFiles; i++) {
+                    tempArray[j] = new AttachmentBuilder(nugget.fileLocation + i + nugget.fileType);
+                    console.log(nugget.fileLocation + i + nugget.fileType)
                     if (j == 9) {
-                        //console.log(`${randomInteger} ${i}/${totalFiles}`)
+                        //console.log(`${nugget.randomInteger} ${i}/${nugget.totalFiles}`)
                         fileAttachments[h] = tempArray
-                        //console.log(`${randomInteger} fileAttachments ${h}: ${fileAttachments[h]}`)
+                        //console.log(`${nugget.randomInteger} fileAttachments ${h}: ${fileAttachments[h]}`)
                         tempArray = []
                         j = -1
                         h++
@@ -203,9 +204,10 @@ module.exports = {
                     j++
                 }
                 fileAttachments[h] = tempArray
-                //console.log(`${randomInteger} fileAttachments ${h}: ${fileAttachments[h]}`)
-                //const file = new AttachmentBuilder(fileLocation + i + fileType);
-                if (!failure) {
+                //console.log(`${nugget.randomInteger} tempArray: ${tempArray}`)
+                //console.log(`${nugget.randomInteger} fileAttachments ${h}: ${fileAttachments[h]}`)
+                //const file = new AttachmentBuilder(nugget.fileLocation + i + nugget.fileType);
+                if (!nugget.failure) {
                     //embeds the newly downloaded video; i dont know what happens if its too large
                     await interaction.editReply({ files: fileAttachments[0] });
                     if (h > 0)
@@ -218,27 +220,27 @@ module.exports = {
 
                     //deletes temp files
 
-                    for (let i = 0; i < totalFiles; i++) {
-                        fs.unlink(fileLocation + i + fileType, function (err) {
+                    for (let i = 0; i < nugget.totalFiles; i++) {
+                        fs.unlink(nugget.fileLocation + i + nugget.fileType, function (err) {
                             if (err && err.code == 'ENOENT') {
                                 // file doens't exist
-                                console.info(`${randomInteger} File doesn't exist, won't remove it.`);
+                                console.info(`${nugget.randomInteger} File doesn't exist, won't remove it.`);
                             } else if (err) {
                                 // other errors, e.g. maybe we don't have enough permission
-                                console.error(`${randomInteger} Error occurred while trying to remove file at ` + fileLocation + i + fileType);
+                                console.error(`${nugget.randomInteger} Error occurred while trying to remove file at ` + nugget.fileLocation + i + nugget.fileType);
                             }
                         });
                     }
-                    console.info(`${randomInteger} - ${totalFiles} files removed`);
+                    console.info(`${nugget.randomInteger} - ${nugget.totalFiles} files removed`);
                 } else { //something failed; print error message
-                    await interaction.editReply({ content: reply });
+                    await interaction.editReply({ content: nugget.reply });
                 }
             } else // skip everything if it isnt even a link
                 await interaction.editReply(`\"${link}\" is not a valid link`);
 
         } catch (error) { //try catch around the entire bot lets goooo
-            console.error(`${randomInteger}` + error)
-            return "i dont know what you just did but it broke my bot please dont do it again"
+            console.error(`${nugget.randomInteger} catchall:`, error)
+            await interaction.editReply(`bot broke for some reason :( \n-# ${error}`);
         }
     },
 };
