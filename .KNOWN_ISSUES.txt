@@ -1,4 +1,5 @@
 no file size limit means videos occasionally corrupt at the end
+    videos occasinally corrupt regardless of size???
 
 maybe add warning if a lot of images are being downloaded?
     i dont know how to check for this before all of the images are downloaded
