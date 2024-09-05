@@ -219,8 +219,8 @@ module.exports = {
 
 
                     //deletes temp files
-
-                    for (let i = 0; i < nugget.totalFiles; i++) {
+                        //testing if all the videos download correctly
+                    /* for (let i = 0; i < nugget.totalFiles; i++) {
                         fs.unlink(nugget.fileLocation + i + nugget.fileType, function (err) {
                             if (err && err.code == 'ENOENT') {
                                 // file doens't exist
@@ -231,7 +231,7 @@ module.exports = {
                             }
                         });
                     }
-                    console.info(`${nugget.randomInteger} - ${nugget.totalFiles} files removed`);
+                    console.info(`${nugget.randomInteger} - ${nugget.totalFiles} files removed`); */
                 } else { //something failed; print error message
                     await interaction.editReply({ content: nugget.reply });
                 }
