@@ -214,9 +214,8 @@ module.exports = {
                 await interaction.editReply({ files: fileAttachments[0] }); //embeds the newly downloaded video; i dont know what happens if its too large
 
                 if (h > 0) // sends more messages if its more than 10 files
-                    for (let i = 1; i <= h; i++) {
+                    for (let i = 1; i <= h; i++)
                         await interaction.followUp({ files: fileAttachments[i] });
-                    }
 
                 for (let i = 0; i < nugget.totalFiles; i++) { // deletes temp files
                     fs.unlink(nugget.fileLocation + i + nugget.fileType, function (err) {
@@ -227,6 +226,7 @@ module.exports = {
                     });
                 }
                 modules.log.info(nugget.randomInteger, `${nugget.totalFiles} files removed`);
+                
             } else //something failed; print error message
                 await interaction.editReply({ content: nugget.reply });
 
