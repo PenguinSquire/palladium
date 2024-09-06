@@ -51,7 +51,7 @@ async function downloadImages(pickerObject, vars) {
         modules.log.info(vars.randomInteger, `${vars.totalFiles} Images downloaded successfully`);
         setTimeout(() => { // gives extra time before resolving
             resolve(); // resolve has to get extra time for images because there's more than one im p sure
-        }, 2000);
+        }, 5000);
     });
 }
 
