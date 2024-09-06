@@ -50,8 +50,8 @@ async function downloadImages(pickerObject, vars) {
         vars.totalFiles = pickerObject.length
         modules.log.info(vars.randomInteger, `${vars.totalFiles} Images downloaded successfully`);
         setTimeout(() => { // gives extra time before resolving
-            resolve(); // resolve has to get extra time for images because there's more than one im p sure
-        }, 2000);
+            resolve(); // resolve has to get extra time for images because there's more than one im pretty sure
+        }, 5000);
     });
 }
 
@@ -97,8 +97,7 @@ module.exports = {
 
     //bot response start
     async execute(interaction) {
-        //defer gives you more than 3 seconds to return the response
-        await interaction.deferReply({ ephemeral: false });
+        await interaction.deferReply({ ephemeral: false }); //defer gives you more than 3 seconds to return the response
 
         const randInt = Math.floor(Math.random() * 100000000); //randInt is my stupid way of getting the interaction ID
 
@@ -151,13 +150,10 @@ module.exports = {
                 for (var i = 1; i <= 3; i++) { //try 3 times to download if cobalt returns the "try again" error code
                     const response = await apiResponse
                     const stringResponse = JSON.parse(await response)
-                    //console.log(`string response: ${stringResponse}`)
                     nugget.APIstatus = stringResponse['status'];
-                    //console.log("status: " + status)
 
 
                     if (nugget.APIstatus == 'success' || nugget.APIstatus == 'stream' || nugget.APIstatus == "redirect") { //all the non-fail API responses
-                        //console.log("url: " + stringResponse['url'])
                         try {
                             await downloadVideo(stringResponse['url'], nugget)
                             nugget.failure = false
@@ -169,8 +165,6 @@ module.exports = {
                     }
                     else if (nugget.APIstatus == 'picker') { // picker means API returned more than one thing
 
-                        //console.log("pickerType: " + stringResponse['pickerType'])
-                        //console.log("picker: " + stringResponse['picker'])
                         try {
                             await downloadImages(stringResponse['picker'], nugget)
                             nugget.failure = false
@@ -195,23 +189,18 @@ module.exports = {
                             return `Cobalt API returned ${stringResponse['status']}: \n-# ${stringResponse['text']}`
                     }
                 }
-                //im desperately hoping that this never executes but i dont have an easy way to test the "try again" part
-                return "my \`for\` loop broke somehow :((("
+                return "my \`for\` loop broke somehow :(((" //im desperately hoping that this never executes but i dont have an easy way to test the "try again" part
 
             };
             nugget.reply = await textResponse()
-            //console.log("reply: " + nugget.reply)
             let fileAttachments = [];
             let tempArray = [];
             let h = 0; // h is how many messages need to be sent
             let j = 0; // j is the number of files per message
             for (let i = 0; i < nugget.totalFiles; i++) {
                 tempArray[j] = new AttachmentBuilder(nugget.fileLocation + i + nugget.fileType);
-                //console.log(nugget.fileLocation + i + nugget.fileType)
                 if (j == 9) {
-                    //console.log(`${nugget.randomInteger} ${i}/${nugget.totalFiles}`)
                     fileAttachments[h] = tempArray
-                    //console.log(`${nugget.randomInteger} fileAttachments ${h}: ${fileAttachments[h]}`)
                     tempArray = []
                     j = -1
                     h++
@@ -219,28 +208,22 @@ module.exports = {
                 j++
             }
             fileAttachments[h] = tempArray // get all the remaining elements for the final message
-            //console.log(`${nugget.randomInteger} tempArray: ${tempArray}`)
-            //console.log(`${nugget.randomInteger} fileAttachments ${h}: ${fileAttachments[h]}`)
-            //const file = new AttachmentBuilder(nugget.fileLocation + i + nugget.fileType);
+
+
             if (!nugget.failure) {
                 await interaction.editReply({ files: fileAttachments[0] }); //embeds the newly downloaded video; i dont know what happens if its too large
 
                 if (h > 0) // sends more messages if its more than 10 files
                     for (let i = 1; i <= h; i++) {
-                        //console.log(`do we get here (${i})`)
-                        //await interaction.followUp("test");
                         await interaction.followUp({ files: fileAttachments[i] });
                     }
 
                 for (let i = 0; i < nugget.totalFiles; i++) { // deletes temp files
                     fs.unlink(nugget.fileLocation + i + nugget.fileType, function (err) {
-                        if (err && err.code == 'ENOENT') {
-                            // file doens't exist
+                        if (err && err.code == 'ENOENT') // file doens't exist
                             modules.log.info(nugget.randomInteger, `File doesn't exist, won't remove it.`);
-                        } else if (err) {
-                            // other errors, e.g. maybe we don't have enough permission
+                        else if (err) // other errors, e.g. maybe we don't have enough permission
                             modules.log.error(nugget.randomInteger, `Error occurred while trying to remove file at ` + nugget.fileLocation + i + nugget.fileType, err);
-                        }
                     });
                 }
                 modules.log.info(nugget.randomInteger, `${nugget.totalFiles} files removed`);
