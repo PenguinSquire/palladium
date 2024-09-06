@@ -125,6 +125,8 @@ module.exports = {
             if (!isValidUrl(link))
                 return interaction.editReply(`\"${link}\" is not a valid link`);
 
+            modules.log.link(nugget.randomInteger, link)
+
             const apiResponse = fetch('https://api.cobalt.tools/api/json', {
                 method: 'POST',
                 headers: {

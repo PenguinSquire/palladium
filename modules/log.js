@@ -11,20 +11,14 @@ function logToFile(message) {
     logStream.write(`${message}\n`);
     logStream.end();
 }
-
-
-
-const info = (commandID, message) => {
-    logToFile(`[INFO] ${commandID} - ${message}`)
-    console.log(`${commandID} - ${message}`)
-}
-const warn = (commandID, message) => {
-    logToFile(`[WARN] ${commandID} - ${message}`)
-    console.warn(`${commandID} - ${message}`)
-}
-const error = (commandID, message, err) => {
-    logToFile((`[ERROR] ${commandID} - ${message}`, err))
-    console.error(`[ERROR] ${commandID} - ${message}`, err)
+function sendLog (commandID, message, label) {
+    logToFile(`${label} ${commandID} - ${message}`)
+    console.log(`${commandID} - `, message)
 }
 
-module.exports = { info, warn, error };
+module.exports = {
+    info: (commandID, message) => sendLog (commandID, message, ` [INFO]`),
+    warn: (commandID, message) => sendLog (commandID, message, ` [WARN]`),
+    error: (commandID, message, err) => sendLog(commandID, (message, err), `[ERROR]`),
+    link: (commandID, message) => sendLog (commandID, message, `\n       `)
+}
