@@ -3,6 +3,9 @@ my attempt at a fork of the unofficial Cobalt discord bot: https://discord.com/a
 <br />  
 run `node index.js` to start the bot
 
-`node dev-deploy.js` to update the guild commands. This will deploy commands in the `guild` and `dev` folders  
-`node global-deploy.js` to update the global commands. This will deploy commands in the `global` and `universal` folders  
+`node dev-deploy.js` to update the guild commands.  
+&emsp;  This will deploy commands in the `guild` and `dev` folders  
+`node global-deploy.js` to update the global commands.  
+&emsp;  This will deploy commands in the `global` and `universal` folders  
+  
 `node deleteAll.js` to delete all commands  
