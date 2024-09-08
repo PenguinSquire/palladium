@@ -24,5 +24,5 @@ module.exports = {
     info: (commandID, message) => sendLog (commandID, message, ` [INFO]`),
     warn: (commandID, message) => sendLog (commandID, message, ` [WARN]`),
     error: (commandID, message, err) => sendLog(commandID, (message, err), `[ERROR]`),
-    link: (commandID, message) => sendLog (commandID, message, `\n${paddedDay}/${paddedMonth}: `)
+    link: (commandID, message) => sendLog (commandID, message, `\n${paddedMonth}/${paddedDay}: `)
 }

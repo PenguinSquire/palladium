@@ -1,5 +1,5 @@
 
-const regexEscape = (str) => {
+function regexEscape(str) {
     return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
 }
 

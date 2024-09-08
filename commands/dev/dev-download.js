@@ -180,6 +180,8 @@ module.exports = {
                             return `Cobalt couldn't handle your request. Are you sure it's a valid link?`;
                         else if (stringResponse['text'].includes("cobalt is at capacity"))
                             return `Cobalt API is at capacity right now. Try again in a few seconds!`
+                        else if (stringResponse['text'].includes("i couldn't connect to the service api"))
+                            return `Couldn't connect to the service API. Check <https://status.cobalt.tools/> and try again`
                         //the two sections where you probably just need to retry
                         else if (stringResponse['text'].includes("something went wrong when i" && i !== 3))
                             continue
@@ -217,14 +219,6 @@ module.exports = {
                     for (let i = 1; i <= h; i++)
                         await interaction.followUp({ files: fileAttachments[i] });
 
-                for (let i = 0; i < nugget.totalFiles; i++) { // deletes temp files
-                    fs.unlink(nugget.fileLocation + i + nugget.fileType, function (err) {
-                        if (err && err.code == 'ENOENT') // file doens't exist
-                            modules.log.info(nugget.randomInteger, `File doesn't exist, won't remove it.`);
-                        else if (err) // other errors, e.g. maybe we don't have enough permission
-                            modules.log.error(nugget.randomInteger, `Error occurred while trying to remove file at ` + nugget.fileLocation + i + nugget.fileType, err);
-                    });
-                }
                 modules.log.info(nugget.randomInteger, `${nugget.totalFiles} files removed`);
                 
             } else //something failed; print error message
@@ -233,6 +227,15 @@ module.exports = {
         } catch (error) { //try catch around the entire bot lets goooo
             modules.log.error(nugget.randomInteger, `catchall:`, error)
             await interaction.editReply(`bot broke for some reason :( \n-# ${error}`);
+        } finally {
+            for (let i = 0; i < nugget.totalFiles; i++) { // deletes temp files
+                fs.unlink(nugget.fileLocation + i + nugget.fileType, function (err) {
+                    if (err && err.code == 'ENOENT') // file doens't exist
+                        modules.log.info(nugget.randomInteger, `File doesn't exist, won't remove it.`);
+                    else if (err) // other errors, e.g. maybe we don't have enough permission
+                        modules.log.error(nugget.randomInteger, `Error occurred while trying to remove file at ` + nugget.fileLocation + i + nugget.fileType, err);
+                });
+            }
         }
     },
 };

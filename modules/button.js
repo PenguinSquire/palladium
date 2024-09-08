@@ -1,4 +1,4 @@
-const { MessageButton } = require('discord.js');
+const { ButtonBuilder, ButtonStyle} = require('discord.js');
 
 // Button styles
 // Currently there are five different button styles available:
@@ -9,11 +9,12 @@ const { MessageButton } = require('discord.js');
 //     LINK, a button that navigates to a URL.
 
 
-const button = (buttonID, message, style = 'PRIMARY') => {
-    const button = new MessageButton()
+function button (buttonID, message, style = 'PRIMARY') {
+
+    const button = new ButtonBuilder()
         .setCustomId(buttonID)
         .setLabel(message)
-        .setStyle(style)
+        .setStyle(ButtonStyle.Primary)
     return button
 }
 module.exports = { button }
