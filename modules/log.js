@@ -16,13 +16,16 @@ function sendLog (commandID, message, label) {
     console.log(`${commandID} - `, message)
 }
 const d = new Date();
-let day =  d.getDay() + 1
-let  month = d.getMonth() + 1
-let paddedDay = ("00" + day).slice(-2);
+let paddedDay =  ("00" +d.getDate()).slice(-2); // all padded variables are padded to 2 significant digits
+let month = d.getMonth() + 1 // month is zero indexed so you need to add 1
 let paddedMonth = ("00" + month).slice(-2);
+let paddedHour = ("00" + d.getHours()).slice(-2);
+let paddedMinute = ("00" +d.getMinutes()).slice(-2);
 module.exports = {
     info: (commandID, message) => sendLog (commandID, message, ` [INFO]`),
     warn: (commandID, message) => sendLog (commandID, message, ` [WARN]`),
     error: (commandID, message, err) => sendLog(commandID, (message, err), `[ERROR]`),
-    link: (commandID, message) => sendLog (commandID, message, `\n${paddedMonth}/${paddedDay}: `)
+    link: (commandID, message) => {
+        sendLog (commandID, `${paddedHour}:${paddedMinute} | ${message}`, `\n${paddedMonth}/${paddedDay}: `)
+    }
 }
