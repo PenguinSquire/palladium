@@ -175,6 +175,7 @@ module.exports = {
                         }
 
                     } else { // all the Cobalt API error catching
+                        modules.log.info(nugget.randomInteger, `got to the API else statement; i = ${i}`)
                         modules.log.warn(nugget.randomInteger, `Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
                         if (stringResponse['text'].includes("i couldn't process your request"))
                             return `Cobalt couldn't handle your request. Are you sure it's a valid link?`;
@@ -183,9 +184,9 @@ module.exports = {
                         else if (stringResponse['text'].includes("i couldn't connect to the service api"))
                             return `Couldn't connect to the service API. Check <https://status.cobalt.tools/> and try again`
                         //the two sections where you probably just need to retry
-                        else if (stringResponse['text'].includes("something went wrong when i" && i !== 3))
+                        else if (stringResponse['text'].includes("something went wrong when i tried getting info about your link" && i !== 3))
                             continue
-                        else if (stringResponse['text'].includes("something went wrong when i" && i == 3))
+                        else if (stringResponse['text'].includes("something went wrong when i tried getting info about your link" && i == 3))
                             return `Tried ${i} times. Cobalt didn't like your link`
                         else
                             return `Cobalt API returned ${stringResponse['status']}: \n-# ${stringResponse['text']}`
