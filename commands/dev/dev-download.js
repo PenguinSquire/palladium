@@ -102,8 +102,11 @@ module.exports = {
 
         .addBooleanOption(option =>
             option.setName('audio-only')
-                .setDescription('If you only want the video\'s audio')
-                .setRequired(false))
+                .setDescription('If you only want the video\'s audio'))
+
+        .addBooleanOption(option =>
+            option.setName('spoiler')
+                .setDescription('If you want to spoiler the video/images'))
 
         .addStringOption(option =>
             option.setName('quality')
@@ -129,10 +132,12 @@ module.exports = {
             randomInteger: randInt, //randInt is my stupid way of getting the interaction ID
             failure: true,
             URL: '',
+            spoilerText: '',
             fileLocation: `tempFiles/${randInt}_temp`,
             fileType: '.mp4',
             totalFiles: 0,
             reply: 'i dont know what went wrong'
+            
         };
 
         //parse all the user choices
@@ -146,11 +151,16 @@ module.exports = {
             userChoices.audioOnly = 'audio' // only download audio
             nugget.fileType = ".mp3"
         }
+        if (interaction.options.getBoolean('spoiler')) {
+            nugget.fileLocation = `tempFiles/SPOILER_${randInt}_temp`
+            nugget.spoilerText = '||'
+        }
+
         userChoices.quality = interaction.options.getString('quality') ?? '720';
 
         try {
             if (!isValidUrl(userChoices.link))
-                return interaction.editReply(`\"${userChoices.link}\" is not a valid link`);
+                return interaction.editReply(`\"${nugget.spoilerText}${userChoices.link}${nugget.spoilerText}\" is not a valid link`);
 
             modules.log.link(nugget.randomInteger, userChoices.link)
 
@@ -165,7 +175,7 @@ module.exports = {
                         try {
                             nugget.URL = stringResponse['url']
 
-                            await interaction.editReply(`${loadingEmoji} downloading video \n-# [here is the download link](${nugget.URL})`);
+                            await interaction.editReply(`${loadingEmoji} downloading video \n-# [here is the download link](<${nugget.URL}>)`);
                             await downloadVideo(nugget)
                             nugget.failure = false
                             return 'Success!'
@@ -209,7 +219,7 @@ module.exports = {
             };
             nugget.reply = await textResponse()
             if (nugget.URL != '')
-                await interaction.editReply(`${loadingEmoji} uploading video \n-# [here is the download link](${nugget.URL})`);
+                await interaction.editReply(`${loadingEmoji} uploading ${nugget.spoilerText}[video](<${userChoices.link}>)${nugget.spoilerText}`);
 
             let fileAttachments = [];
             let tempArray = [];
@@ -238,15 +248,15 @@ module.exports = {
                 modules.log.info(nugget.randomInteger, `${nugget.totalFiles} files removed`);
 
             } else //something failed; print error message
-                await interaction.editReply({ content: `${nugget.reply} \n${userChoices.link}` });
+                await interaction.editReply({ content: `${nugget.reply} \n${nugget.spoilerText}${userChoices.link}${nugget.spoilerText}` });
 
         } catch (error) { //try catch around the entire bot lets goooo
             if (error.name == 'AbortError') {
-                modules.log.error(nugget.randomInteger, `timeout`)
-                await interaction.editReply(`upload timed out :( \n-# [here is the download link](${nugget.URL})`);
+                modules.log.error(nugget.randomInteger, `timeout`, error)
+                await interaction.editReply(`upload timed out :( \n${nugget.spoilerText}[here is the link](${userChoices.link})${nugget.spoilerText}`);
             } else {
                 modules.log.error(nugget.randomInteger, `catchall:`, error)
-                await interaction.editReply(`bot broke for some reason :( \n${userChoices.link} \n-# ${error}`);
+                await interaction.editReply(`bot broke for some reason :( \n${nugget.spoilerText}${userChoices.link}${nugget.spoilerText} \n-# ${error}`);
             }
         } finally {
             for (let i = 0; i < nugget.totalFiles; i++) { // deletes temp files
