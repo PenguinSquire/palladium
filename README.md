@@ -5,7 +5,7 @@ non-breaking space for indentation: ' '
 -->
 
 
-# palladium  
+# Palladium  
 A discord bot that natively embeds images and videos in discord from a variety of sources by utilizing the [Cobalt API](https://github.com/imputnet/cobalt/tree/main)
 
       initially a re-implementation of the [Cobalt Downloader](https://discord.com/application-directory/1093352359989612627)  discord bot (unaffiliated with Cobalt API)  
