@@ -9,7 +9,7 @@ const { ButtonBuilder, ButtonStyle} = require('discord.js');
 //     LINK, a button that navigates to a URL.
 
 
-function button (buttonID, message, style = 'PRIMARY') {
+function button(buttonID, message, style = 'PRIMARY') {
 
     const button = new ButtonBuilder()
         .setCustomId(buttonID)

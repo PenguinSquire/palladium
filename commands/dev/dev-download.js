@@ -30,7 +30,7 @@ const apiResponse = async (nugget, userChoices) => {
 
 async function downloadVideo(vars) {
     return new Promise((resolve, reject) => {
-        const destination = vars.fileLocation + 0 + vars.fileType
+        const destination = vars.fileLocation + 0 + vars.fileType[0]
         const file = fs.createWriteStream(destination);
 
         https.get(vars.URL, (response) => {
@@ -54,9 +54,10 @@ async function downloadImages(pickerObject, vars) {
     return new Promise((resolve, reject) => {
         for (i in pickerObject) {
             const imageURL = pickerObject[i].url
-            vars.fileType = '.' + imageURL.split(/[#?]/)[0].split('.').pop().trim();
+            //console.log(imageURL)
+            vars.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)[0];
 
-            const destination = vars.fileLocation + i + vars.fileType
+            const destination = vars.fileLocation + i + vars.fileType[i]
             const file = fs.createWriteStream(destination);
 
             https.get(imageURL, (response) => {
@@ -72,6 +73,7 @@ async function downloadImages(pickerObject, vars) {
                 });
             });
         }
+        //console.log(vars.fileType)
         vars.totalFiles = pickerObject.length
         modules.log.info(vars.randomInteger, `${vars.totalFiles} Images downloaded successfully`);
         setTimeout(() => { // gives extra time before resolving
@@ -134,10 +136,10 @@ module.exports = {
             URL: '',
             spoilerText: '',
             fileLocation: `tempFiles/${randInt}_temp`,
-            fileType: '.mp4',
+            fileType: Array('.mp4'),
             totalFiles: 0,
             reply: 'i dont know what went wrong'
-            
+
         };
 
         //parse all the user choices
@@ -149,7 +151,7 @@ module.exports = {
 
         if (interaction.options.getBoolean('audio-only')) {
             userChoices.audioOnly = 'audio' // only download audio
-            nugget.fileType = ".mp3"
+            nugget.fileType[0] = ".mp3"
         }
         if (interaction.options.getBoolean('spoiler')) {
             nugget.fileLocation = `tempFiles/SPOILER_${randInt}_temp`
@@ -167,6 +169,7 @@ module.exports = {
             const textResponse = async () => {
                 for (var i = 1; i <= 3; i++) { //try 3 times to download if cobalt returns the "try again" error code
                     let stringResponse = await apiResponse(nugget, userChoices)
+                    userChoices.link = modules.backupEmbed(userChoices.link)
                     //nugget.APIstatus = stringResponse['status'];
 
 
@@ -226,7 +229,7 @@ module.exports = {
             let h = 0; // h is how many messages need to be sent
             let j = 0; // j is the number of files per message
             for (let i = 0; i < nugget.totalFiles; i++) {
-                tempArray[j] = new AttachmentBuilder(nugget.fileLocation + i + nugget.fileType);
+                tempArray[j] = new AttachmentBuilder(nugget.fileLocation + i + nugget.fileType[i]);
                 if (j == 9) {
                     fileAttachments[h] = tempArray
                     tempArray = []
@@ -241,9 +244,12 @@ module.exports = {
             if (!nugget.failure) {
                 await interaction.editReply({ content: 'upload complete', files: fileAttachments[0] }); //embeds the newly downloaded video; i dont know what happens if its too large
 
-                if (h > 0) // sends more messages if its more than 10 files
+                if (h > 0) { // sends more messages if its more than 10 files
+                    if (j == 0)
+                        h--
                     for (let i = 1; i <= h; i++)
                         await interaction.followUp({ files: fileAttachments[i] });
+                }
 
                 modules.log.info(nugget.randomInteger, `${nugget.totalFiles} files removed`);
 
@@ -260,11 +266,11 @@ module.exports = {
             }
         } finally {
             for (let i = 0; i < nugget.totalFiles; i++) { // deletes temp files
-                fs.unlink(nugget.fileLocation + i + nugget.fileType, function (err) {
+                fs.unlink(nugget.fileLocation + i + nugget.fileType[i], function (err) {
                     if (err && err.code == 'ENOENT') // file doens't exist
                         modules.log.info(nugget.randomInteger, `File doesn't exist, won't remove it.`);
                     else if (err) // other errors, e.g. maybe we don't have enough permission
-                        modules.log.error(nugget.randomInteger, `Error occurred while trying to remove file at ` + nugget.fileLocation + i + nugget.fileType, err);
+                        modules.log.error(nugget.randomInteger, `Error occurred while trying to remove file at ` + nugget.fileLocation + i + nugget.fileType[i], err);
                 });
             }
         }
