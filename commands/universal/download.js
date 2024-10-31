@@ -161,7 +161,7 @@ module.exports = {
 
         try {
             if (!isValidUrl(userChoices.link))
-                return interaction.editReply(`\"${nugget.spoilerText}${userChoices.link}${nugget.spoilerText}\" is not a valid link`);
+                return interaction.editReply(`\"\`\`${nugget.spoilerText}${userChoices.link}${nugget.spoilerText}\`\`\" is not a valid link`);
 
             modules.log.link(nugget.randomInteger, userChoices.link)
 
