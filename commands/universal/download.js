@@ -99,8 +99,9 @@ module.exports = {
         .addStringOption(option =>
             option.setName('link')
                 .setDescription('The video or image link to embed')
-                .setRequired(true))
+                .setRequired(true)),
 
+        /* // COBALT DOWN :(
         .addBooleanOption(option =>
             option.setName('audio-only')
                 .setDescription('If you only want the video\'s audio'))
@@ -123,11 +124,20 @@ module.exports = {
                     { name: '2160p', value: '2160' },
                     { name: 'max', value: 'max' },
                 )),
-
+     // */
     //bot response start
     async execute(interaction) {
+        let userLink = interaction.options.getString('link')
+        if (!isValidUrl(userLink))
+            return interaction.reply(`\"\`\`${userLink}\`\`\" is not a valid link`);
+        else {
+            userLink = `[Cobalt died](${modules.backupEmbed(userLink)}) :(`
+            return interaction.reply({ content: userLink });
+        }
+        /* // COBALT DOWN :(
         await interaction.deferReply({ ephemeral: false }); //defer gives you more than 3 seconds to return the response
 
+        
         const randInt = Math.floor(Math.random() * 100000000)
         let nugget = { //no particular reason i named the variable nugget
             randomInteger: randInt, //randInt is my stupid way of getting the interaction ID
@@ -273,5 +283,6 @@ module.exports = {
                 });
             }
         }
+        // */
     },
 };
