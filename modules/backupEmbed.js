@@ -15,7 +15,7 @@ function backupEmbed(link) {
     if (host.includes("instagram")) {
         fix = 'dd'
     } else if (host.includes("tiktok")) {
-        host = host.slice(1, host.length)
+        host = host.slice(2, host.length)
         fix = 'tfx'
     } else if (host.includes("twitter")) {
         fix = 'vx'
