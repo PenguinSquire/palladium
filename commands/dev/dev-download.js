@@ -1,5 +1,6 @@
 const { AttachmentBuilder, SlashCommandBuilder } = require('discord.js');
 const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const modules = require("../../modules/modules.js")
 const loadingEmoji = '<a:BlurpleLoading:1285784156579561483>'
@@ -7,7 +8,7 @@ const loadingEmoji = '<a:BlurpleLoading:1285784156579561483>'
 const apiResponse = async (nugget, userChoices) => {
     const encodedLink = encodeURI(userChoices.link); // cobalt requires links to be sent as URI
 
-    return await fetch('https://api.cobalt.tools/api/json', {
+    return await fetch('http://localhost:9000/', {
         method: 'POST',
         headers: {
             Accept: 'application/json',
@@ -28,39 +29,42 @@ const apiResponse = async (nugget, userChoices) => {
         });
 }
 
-async function downloadVideo(vars) {
+async function downloadVideo(nugget) {
     return new Promise((resolve, reject) => {
-        const destination = vars.fileLocation + 0 + vars.fileType[0]
+        const destination = nugget.fileLocation + 0 + nugget.fileType[0]
         const file = fs.createWriteStream(destination);
 
-        https.get(vars.URL, (response) => {
+        const protocol = nugget.URL.startsWith('https') ? https : http;
+
+        protocol.get(nugget.URL, (response) => {
             response.pipe(file);
             file.on('finish', () => {
                 file.close(() => {
-                    modules.log.info(vars.randomInteger, 'Video downloaded successfully');
-                    vars.totalFiles++
+                    modules.log.info(nugget.randomInteger, 'Video downloaded successfully');
+                    nugget.totalFiles++
                     resolve(); // resolve can be here because as soon as it starts closing files, it means its done with our one video file
                 });
             });
         }).on('error', (err) => {
             fs.unlink(destination, () => {
-                modules.log.error(vars.randomInteger, 'Error downloading file:', err);
+                modules.log.error(nugget.randomInteger, 'Error downloading file:', err);
             });
         });
     });
 }
 
-async function downloadImages(pickerObject, vars) {
+async function downloadImages(pickerObject, nugget) {
     return new Promise((resolve, reject) => {
         for (i in pickerObject) {
             const imageURL = pickerObject[i].url
             //console.log(imageURL)
-            vars.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)[0];
+            nugget.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)[0];
 
-            const destination = vars.fileLocation + i + vars.fileType[i]
+            const destination = nugget.fileLocation + i + nugget.fileType[i]
             const file = fs.createWriteStream(destination);
 
-            https.get(imageURL, (response) => {
+            const protocol = imageURL.startsWith('https') ? https : http;
+            protocol.get(imageURL, (response) => {
                 response.pipe(file);
                 file.on('finish', () => {
                     file.close(() => {
@@ -69,13 +73,13 @@ async function downloadImages(pickerObject, vars) {
                 });
             }).on('error', (err) => {
                 fs.unlink(destination, () => {
-                    modules.log.error(vars.randomInteger, 'Error downloading file:', err);
+                    modules.log.error(nugget.randomInteger, 'Error downloading file:', err);
                 });
             });
         }
         //console.log(vars.fileType)
-        vars.totalFiles = pickerObject.length
-        modules.log.info(vars.randomInteger, `${vars.totalFiles} Images downloaded successfully`);
+        nugget.totalFiles = pickerObject.length
+        modules.log.info(nugget.randomInteger, `${nugget.totalFiles} Images downloaded successfully`);
         setTimeout(() => { // gives extra time before resolving
             resolve(); // resolve has to get extra time for images because there's more than one im pretty sure
         }, 5000);
@@ -171,9 +175,8 @@ module.exports = {
                     let stringResponse = await apiResponse(nugget, userChoices)
                     userChoices.link = modules.backupEmbed(userChoices.link)
                     //nugget.APIstatus = stringResponse['status'];
-
-
-                    if (stringResponse['status'] == 'success' || stringResponse['status'] == 'stream' || stringResponse['status'] == "redirect") { //all the non-fail API responses
+                    /console.log(nugget.randomInteger, stringResponse)
+                    if (stringResponse['status'] == 'tunnel' || stringResponse['status'] == "redirect") { //all the non-fail API responses
 
                         try {
                             nugget.URL = stringResponse['url']
