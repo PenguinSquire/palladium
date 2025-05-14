@@ -10,6 +10,7 @@ const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
 	// Grab all the command files from the commands directory you created earlier
+
 	if (folder == "global" || folder == "universal") {
 		const commandsPath = path.join(foldersPath, folder);
 		const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -23,7 +24,7 @@ for (const folder of commandFolders) {
 					command.data.contexts = [0, 1, 2];
 					command.data.integration_types = [0, 1];
 				}
-
+				//console.log(command)
 				commands.push(command.data.toJSON());
 			} else {
 				console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
