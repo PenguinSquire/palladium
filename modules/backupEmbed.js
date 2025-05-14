@@ -9,24 +9,18 @@ function backupEmbed(link) {
     let pathname = url.pathname;
     let search = url.search;
     //console.log(url)
-    if ((/^www\./i.test(url.host))) {
-        www = 'www.'
-        host = host.slice(4, host.length)
-    }
     if (host.includes("instagram")) {
-        fix = 'dd'
+        host = host.replace("instagram", "ddinstagram")
         search = ''
     } else if (host.includes("tiktok")) {
-        host = host.slice(2, host.length)
-        fix = 'tfx'
+        host = host.replace("tiktok", "tfxktok")
         search = ''
     } else if (host.includes("twitter")) {
-        fix = 'vx'
+        host = host.replace("twitter", "vxtwitter")
     } else if (host.includes("x.com")) {
-        host = host.slice(1, host.length)
-        fix = 'vxtwitter'
+        host = host.replace("x.com", "vxtwitter")
     }
-    let newLink = protocol + '//' + www + fix + host + pathname + search
+    let newLink = protocol + '//' + host + pathname + search
     return newLink
 }
 module.exports = { backupEmbed }

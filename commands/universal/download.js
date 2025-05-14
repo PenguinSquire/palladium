@@ -173,10 +173,11 @@ module.exports = {
             const textResponse = async () => {
                 for (var i = 1; i <= 3; i++) { //try 3 times to download if cobalt returns the "try again" error code
                     let stringResponse = await apiResponse(nugget, userChoices)
+                    modules.log.info(nugget.randomInteger, `Before: ${nugget.randomInteger} - ${userChoices.link}`)
                     userChoices.link = modules.backupEmbed(userChoices.link)
+                    modules.log.info(nugget.randomInteger, `After:  ${nugget.randomInteger} - ${userChoices.link}`)
                     //nugget.APIstatus = stringResponse['status'];
-                    
-                    /console.log(nugget.randomInteger, stringResponse)
+                    console.log(nugget.randomInteger, stringResponse)
                     if (stringResponse['status'] == 'tunnel' || stringResponse['status'] == "redirect") { //all the non-fail API responses
 
                         try {
@@ -200,6 +201,18 @@ module.exports = {
                         } catch (imageError) {
                             modules.log.error(nugget.randomInteger, `Image Download`, imageError)
                             return `image download failed: ${imageError}`
+                        }
+
+                    } else if (stringResponse['status'] == 'error') { // picker means API returned more than one thing
+                        console.log(stringResponse['error'])
+                        if (stringResponse['error'].code == 'error.api.fetch.short_link') {
+                            return `Try a non-shortened link maybe?`
+                        } else if (stringResponse['error'].code == 'error.api.youtube.login') {
+                            return `error.api.youtube.login (???)`
+                        }
+                        
+                        else {
+                            return `Cobalt returned an error I havent caught yet: \n\`${stringResponse['error'].code}\``
                         }
 
                     } else { // all the Cobalt API error catching

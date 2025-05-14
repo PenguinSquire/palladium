@@ -13,7 +13,7 @@ function logToFile(message) {
 }
 function sendLog (commandID, message, label) {
     logToFile(`${label} ${commandID} - ${message}`)
-    console.log(`${commandID} - `, message)
+    console.log(`${label} ${commandID} - `, message)
 }
 const d = new Date();
 let paddedDay =  ("00" +d.getDate()).slice(-2); // all padded variables are padded to 2 significant digits
