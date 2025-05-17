@@ -198,7 +198,7 @@ module.exports = {
                             return `image download failed: ${imageError}`
                         }
 
-                    } else if (stringResponse['status'] == 'error') { // picker means API returned more than one thing
+                    } else if (stringResponse['status'] == 'error') { // all the error codes ive found so far
                         console.log(stringResponse['error'])
                         if (stringResponse['error'].code == 'error.api.fetch.short_link') {
                             return `Try a non-shortened link maybe?`
