@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
-const { myUserID } = require('../../config.json');
+const { altUserID, myUserID } = require('../../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,7 +17,7 @@ module.exports = {
         const command = interaction.client.commands.get(commandName);//commandName);
 
         // if userID isnt mine, dont execute command
-        if (interaction.user.id.toString() != myUserID)
+        if (interaction.user.id.toString() != myUserID && interaction.user.id.toString() != altUserID)
             return interaction.reply({ content: `you arent allowed to reload commands`, ephemeral: true });
         if (!command)
             return interaction.reply({ content: `There is no command with name \`${commandName}\`!`, ephemeral: true });

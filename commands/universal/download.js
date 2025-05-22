@@ -208,7 +208,7 @@ module.exports = {
                         if (stringResponse['error'].code == 'error.api.fetch.short_link') {
                             return `Try a non-shortened link maybe?`
                         } else if (stringResponse['error'].code == 'error.api.youtube.login') {
-                            return `error.api.youtube.login (???)`
+                            return `error.api.youtube.login (??? idk what this means)`
                         }
                         
                         else {
