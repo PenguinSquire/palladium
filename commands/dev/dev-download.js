@@ -9,7 +9,7 @@ const apiResponse = async (nugget, userChoices) => {
     const encodedLink = encodeURI(userChoices.link); // cobalt requires links to be sent as URI
 
     return await fetch('http://localhost:9000/', {
-        method: 'POST',
+        method: 'POST', 
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
