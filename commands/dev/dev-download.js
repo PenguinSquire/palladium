@@ -190,7 +190,7 @@ module.exports = {
                                 let fileName = stringResponse['filename']
                                 const typeMatch = fileName.substring(fileName.lastIndexOf('.'));; // extract any file type that exists
                                 nugget.fileType[0] = typeMatch ? typeMatch : nugget.fileType[0]; // set the file type is one is found
-                                
+
                                 if (isTitle(fileName)) { // only run this is the file name is useful for the user
                                     fileName = typeMatch[0] ? fileName.replace(typeMatch[0], '') : fileName; // set the file name minus the type
                                     const dataMatch = fileName.match(/^(.*)\(/); // extract any extra data that exists
@@ -223,7 +223,7 @@ module.exports = {
                             if (stringResponse['error'].code == 'error.api.fetch.short_link') {
                                 return `Try a non-shortened link maybe?`
                             } else if (stringResponse['error'].code == 'error.api.youtube.login') {
-                                return `error.api.youtube.login (???)`
+                                return `Youtube hates me right now for some reason \n Try again in a few hours(? idk)`
                             }
 
                             else {
