@@ -40,6 +40,14 @@ async function downloadVideo(nugget) {
             response.pipe(file);
             file.on('finish', () => {
                 file.close(() => {
+                    const fileStats = fs.statSync(destination);
+                    const fileSize = fileStats.size;
+                    console.info(`File: ${destination} created with size: ${fileSize}`);
+                    if (fileSize == 0) {
+                        fs.unlinkSync(destination); // clean up
+                        return reject("returned 0 byte file");
+                    }
+
                     log.info(nugget.randomInteger, 'Video downloaded successfully');
                     nugget.totalFiles++
                     resolve(); // resolve can be here because as soon as it starts closing files, it means its done with our one video file
@@ -48,6 +56,7 @@ async function downloadVideo(nugget) {
         }).on('error', (err) => {
             fs.unlink(destination, () => {
                 log.error(nugget.randomInteger, 'Error downloading file:', err);
+                return reject(err);
             });
         });
     });
