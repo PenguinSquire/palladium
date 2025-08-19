@@ -40,6 +40,14 @@ async function downloadVideo(nugget) {
             response.pipe(file);
             file.on('finish', () => {
                 file.close(() => {
+                    const fileStats = fs.statSync(destination);
+                    const fileSize = fileStats.size;
+                    console.info(`File: ${destination} created with size: ${fileSize}`);
+                    if (fileSize == 0) {
+                        fs.unlinkSync(destination); // clean up
+                        return reject("returned 0 byte file");
+                    }
+
                     log.info(nugget.randomInteger, 'Video downloaded successfully');
                     nugget.totalFiles++
                     resolve(); // resolve can be here because as soon as it starts closing files, it means its done with our one video file
@@ -48,6 +56,7 @@ async function downloadVideo(nugget) {
         }).on('error', (err) => {
             fs.unlink(destination, () => {
                 log.error(nugget.randomInteger, 'Error downloading file:', err);
+                return reject(err);
             });
         });
     });
@@ -190,7 +199,7 @@ module.exports = {
                                 let fileName = stringResponse['filename']
                                 const typeMatch = fileName.substring(fileName.lastIndexOf('.'));; // extract any file type that exists
                                 nugget.fileType[0] = typeMatch ? typeMatch : nugget.fileType[0]; // set the file type is one is found
-                                
+
                                 if (isTitle(fileName)) { // only run this is the file name is useful for the user
                                     fileName = typeMatch[0] ? fileName.replace(typeMatch[0], '') : fileName; // set the file name minus the type
                                     const dataMatch = fileName.match(/^(.*)\(/); // extract any extra data that exists
