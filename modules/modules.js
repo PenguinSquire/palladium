@@ -14,7 +14,8 @@ function isTitle(string) {
         "youtube",
         "instagram",
         "tiktok",
-        "twitter"
+        "twitter",
+        "tumblr"
     ];
     // if the string contains [keyword]_ then return true
     return !(keywords.some(keyword => string.includes(`${keyword}_`)));
@@ -34,7 +35,8 @@ function backupEmbed(link) {
         host = host.replace("instagram", "ddinstagram")
         search = ''
     } else if (host.includes("tiktok")) {
-        host = host.replace("tiktok", "tfxktok")
+        // tfxtok was worse than just normal tiktok embeds
+        //host = host.replace("tiktok", "tfxktok")
         search = ''
     } else if (host.includes("twitter")) {
         host = host.replace("twitter", "vxtwitter")
