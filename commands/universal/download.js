@@ -2,7 +2,7 @@ const { AttachmentBuilder, SlashCommandBuilder } = require('discord.js');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
-const { log, backupEmbed, isTitle } = require("../../modules/modules.js")
+const { log, backupEmbed, isTitle } = require("../../modules/modules.js");
 const loadingEmoji = '<a:BlurpleLoading:1285784156579561483>'
 
 const apiResponse = async (nugget, userChoices) => {
@@ -29,7 +29,7 @@ const apiResponse = async (nugget, userChoices) => {
         });
 }
 
-async function downloadVideo(nugget) {
+async function downloadMedia(nugget) {
     return new Promise((resolve, reject) => {
         const destination = nugget.fileLocation + 0 + nugget.fileType[0]
         const file = fs.createWriteStream(destination);
@@ -48,7 +48,7 @@ async function downloadVideo(nugget) {
                         return reject("returned 0 byte file");
                     }
 
-                    log.info(nugget.randomInteger, 'Video downloaded successfully');
+                    log.info(nugget.randomInteger, '1 File downloaded successfully');
                     nugget.totalFiles++
                     resolve(); // resolve can be here because as soon as it starts closing files, it means its done with our one video file
                 });
@@ -88,7 +88,7 @@ async function downloadImages(pickerObject, nugget) {
         }
         //console.log(vars.fileType)
         nugget.totalFiles = pickerObject.length
-        log.info(nugget.randomInteger, `${nugget.totalFiles} Images downloaded successfully`);
+        log.info(nugget.randomInteger, `${nugget.totalFiles} Files downloaded successfully`);
         setTimeout(() => { // gives extra time before resolving
             resolve(); // resolve has to get extra time for images because there's more than one im pretty sure
         }, 5000);
@@ -108,20 +108,20 @@ function isValidUrl(string) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('download')
-        .setDescription('embeds video/images from a link')
+        .setDescription('embeds media from a link')
         .addStringOption(option =>
             option.setName('link')
-                .setDescription('The video or image link to embed')
+                .setDescription('The media link to embed')
                 .setRequired(true))
         .addBooleanOption(option =>
             option.setName('audio-only')
-                .setDescription('If you only want the video\'s audio'))
+                .setDescription('If you only want the media\'s audio'))
         .addBooleanOption(option =>
             option.setName('spoiler')
-                .setDescription('If you want to spoiler the video/images'))
+                .setDescription('If you want to spoiler the media'))
         .addStringOption(option =>
             option.setName('quality')
-                .setDescription('If video media needs a lower quality to be uploaded')
+                .setDescription('If the media needs a lower quality to be uploaded')
                 .addChoices(
                     { name: '144p', value: '144' },
                     { name: '240p', value: '240' },
@@ -177,6 +177,16 @@ module.exports = {
 
             const textResponse = async () => {
                 for (var i = 1; i <= 3; i++) { //try 3 times to download if cobalt returns the "try again" error code
+                    //funny section
+                    console.log(nugget.randomInteger % 1000)
+                    if (nugget.randomInteger % 1000 == 2) {
+                        userChoices.link = "I'm not giving you that";
+                        return "Hi! It's me, The Computer"
+                    }
+                    if (nugget.randomInteger % 1000 == 46) {
+                        userChoices.link = "https://www.tumblr.com/palladium-archive/795441871259336704"
+                    }
+
                     let stringResponse = await apiResponse(nugget, userChoices)
                     if (stringResponse instanceof Error) { // if response is an error
                         log.info(nugget.randomInteger, `${stringResponse.name}: ${stringResponse.message}`)
@@ -207,13 +217,13 @@ module.exports = {
                                     console.log(nugget.fileName.match(/^(.*)\(/));
                                 }
 
-                                await interaction.editReply(`${loadingEmoji} downloading video \n-# [here is the download link](<${nugget.URL}>)`);
-                                await downloadVideo(nugget)
+                                await interaction.editReply(`${loadingEmoji} downloading media \n-# [here is the download link](<${nugget.URL}>)`);
+                                await downloadMedia(nugget)
                                 nugget.failure = false
                                 return 'Success!'
                             } catch (videoError) {
                                 console.error(`${nugget.randomInteger} Video Error:`, videoError)
-                                return `video download failed: ${videoError}`
+                                return `media download failed: ${videoError}`
                             }
                         }
                         else if (stringResponse['status'] == 'picker') { // picker means API returned more than one thing
@@ -233,6 +243,10 @@ module.exports = {
                                 return `Try a non-shortened link maybe?`
                             } else if (stringResponse['error'].code == 'error.api.youtube.login') {
                                 return `Youtube hates me right now for some reason \n Try again in a few hours(? idk)`
+                            } else if (stringResponse['error'].code == 'error.api.content.post.age') {
+                                return `The media is age restricted`
+                            } else if (stringResponse['error'].code == 'error.api.link.invalid') {
+                                return `This link is not currently supported`
                             }
 
                             else {
@@ -264,7 +278,7 @@ module.exports = {
             };
             nugget.reply = await textResponse()
             if (nugget.URL != '')
-                await interaction.editReply(`${loadingEmoji} uploading ${nugget.spoilerText}[video](<${userChoices.link}>)${nugget.spoilerText}`);
+                await interaction.editReply(`${loadingEmoji} uploading ${nugget.spoilerText}[media](<${userChoices.link}>)${nugget.spoilerText}`);
 
             let fileAttachments = [];
             let tempArray = [];

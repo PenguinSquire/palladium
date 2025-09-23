@@ -36,9 +36,9 @@ I am not sure how to properly re-initialize the `node_modules` server
 
 run `node index` to start the bot  
   
-`node dev-deploy.js` to update the guild commands.  
+`node dev-deploy` to update the guild commands.  
       This will deploy commands in the `guild` and `dev` folders  
-`node global-deploy.js` to update the global commands.  
+`node global-deploy` to update the global commands.  
       This will deploy commands in the `global` and `universal` folders  
   
-`node deleteAll.js` to delete all commands  
+`node deleteAll` to delete all commands  
