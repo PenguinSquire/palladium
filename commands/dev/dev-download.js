@@ -40,11 +40,8 @@ async function download(wholeObject, nugget) {
 
             gimmeGhoul(nugget, reject, imageURL, i)
         }
-        console.log(typeof wholeObject["audio"])
         // if they want the audio and it exists
         if (nugget.optionalAudio && typeof wholeObject["audio"] != "undefined") {
-            console.log(nugget.totalFiles)
-            console.log()
             nugget.fileType[i] = ".mp3"
             gimmeGhoul(nugget, reject, wholeObject["audio"], i)
         }
