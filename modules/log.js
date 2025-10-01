@@ -19,7 +19,8 @@ function sendLog(commandID, message, label) {
 module.exports = {
     info: (commandID, message) => sendLog(commandID, message, ` [INFO]`),
     warn: (commandID, message) => sendLog(commandID, message, ` [WARN]`),
-    error: (commandID, message, err) => sendLog(commandID, (message, err), `[ERROR]`),
+    error: (commandID, message, err) => sendLog(commandID, (message, err), `  [ERR]`),
+    api: (commandID, err) => sendLog(commandID, err, `  [API]`),
     link: (commandID, message) => {
         const d = new Date();
         let paddedDay = ("00" + d.getDate()).slice(-2); // all padded variables are padded to 2 significant digits

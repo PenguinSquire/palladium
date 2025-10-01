@@ -29,72 +29,57 @@ const apiResponse = async (nugget, userChoices) => {
         });
 }
 
-async function downloadMedia(nugget) {
+async function download(wholeObject, nugget) {
+    console.log(wholeObject)
+    let pickerObject = wholeObject['picker']
     return new Promise((resolve, reject) => {
-        const destination = nugget.fileLocation + 0 + nugget.fileType[0]
-        const file = fs.createWriteStream(destination);
-
-        const protocol = nugget.URL.startsWith('https') ? https : http;
-
-        protocol.get(nugget.URL, (response) => {
-            response.pipe(file);
-            file.on('finish', () => {
-                file.close(() => {
-                    const fileStats = fs.statSync(destination);
-                    const fileSize = fileStats.size;
-                    console.info(`File: ${destination} created with size: ${fileSize}`);
-                    if (fileSize == 0) {
-                        fs.unlinkSync(destination); // clean up
-                        return reject("returned 0 byte file");
-                    }
-
-                    log.info(nugget.randomInteger, '1 File downloaded successfully');
-                    nugget.totalFiles++
-                    resolve(); // resolve can be here because as soon as it starts closing files, it means its done with our one video file
-                });
-            });
-        }).on('error', (err) => {
-            fs.unlink(destination, () => {
-                log.error(nugget.randomInteger, 'Error downloading file:', err);
-                return reject(err);
-            });
-        });
-    });
-}
-
-async function downloadImages(pickerObject, nugget) {
-    return new Promise((resolve, reject) => {
-        for (i in pickerObject) {
+        let i = 0;
+        for (i = 0; i < pickerObject.length; i++) {
             const imageURL = pickerObject[i].url
-            //console.log(imageURL)
             nugget.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)[0]; //gets the filetype
 
-            const destination = nugget.fileLocation + i + nugget.fileType[i]
-            const file = fs.createWriteStream(destination);
-
-            const protocol = imageURL.startsWith('https') ? https : http;
-            protocol.get(imageURL, (response) => {
-                response.pipe(file);
-                file.on('finish', () => {
-                    file.close(() => {
-                        //console.log(`${i} image downloaded`)
-                    });
-                });
-            }).on('error', (err) => {
-                fs.unlink(destination, () => {
-                    log.error(nugget.randomInteger, 'Error downloading file:', err);
-                });
-            });
+            gimmeGhoul(nugget, reject, imageURL, i)
         }
-        //console.log(vars.fileType)
-        nugget.totalFiles = pickerObject.length
+        console.log(typeof wholeObject["audio"])
+        // if they want the audio and it exists
+        if (nugget.optionalAudio && typeof wholeObject["audio"] != "undefined") {
+            console.log(nugget.totalFiles)
+            console.log()
+            nugget.fileType[i] = ".mp3"
+            gimmeGhoul(nugget, reject, wholeObject["audio"], i)
+        }
         log.info(nugget.randomInteger, `${nugget.totalFiles} Files downloaded successfully`);
         setTimeout(() => { // gives extra time before resolving
             resolve(); // resolve has to get extra time for images because there's more than one im pretty sure
         }, 5000);
     });
 }
+function gimmeGhoul(nugget, reject, imageURL, i = 0) {
+    const destination = nugget.fileLocation + i + nugget.fileType[i]
+    const file = fs.createWriteStream(destination);
 
+    const protocol = imageURL.startsWith('https') ? https : http;
+    protocol.get(imageURL, (response) => {
+        response.pipe(file);
+        file.on('finish', () => {
+            file.close(() => {
+                const fileStats = fs.statSync(destination);
+                const fileSize = fileStats.size;
+                console.info(`File: ${destination} created with size: ${fileSize}`);
+                if (fileSize == 0) {
+                    fs.unlinkSync(destination); // clean up
+                    return reject("returned 0 byte file");
+                }
+                nugget.totalFiles++
+            });
+        });
+    }).on('error', (err) => {
+        fs.unlink(destination, () => {
+            log.error(nugget.randomInteger, 'Error downloading files:', err);
+            return reject(err);
+        });
+    });
+}
 
 function isValidUrl(string) {
     try {
@@ -119,6 +104,9 @@ module.exports = {
         .addBooleanOption(option =>
             option.setName('spoiler')
                 .setDescription('If you want to spoiler the media'))
+        .addBooleanOption(option =>
+            option.setName('extra-audio')
+                .setDescription('If you want to attach any additional audio from multi-media posts (enabled by default)'))
         .addStringOption(option =>
             option.setName('quality')
                 .setDescription('If the media needs a lower quality to be uploaded')
@@ -144,6 +132,7 @@ module.exports = {
             URL: '',
             fileName: '',
             spoilerText: '',
+            optionalAudio: true,
             fileLocation: `tempFiles/${randInt}_temp`,
             fileType: Array('.mp4'),
             totalFiles: 0,
@@ -162,11 +151,7 @@ module.exports = {
             userChoices.audioOnly = 'audio' // only download audio
             nugget.fileType[0] = ".mp3"
         }
-        if (interaction.options.getBoolean('spoiler')) {
-            nugget.fileLocation = `tempFiles/SPOILER_${randInt}_temp`
-            nugget.spoilerText = '||'
-        }
-
+        nugget.optionalAudio = interaction.options.getBoolean('extra-audio') ?? true;
         userChoices.quality = interaction.options.getString('quality') ?? '720';
 
         try {
@@ -176,38 +161,52 @@ module.exports = {
             log.link(nugget.randomInteger, userChoices.link)
 
             const textResponse = async () => {
-                for (var i = 1; i <= 3; i++) { //try 3 times to download if cobalt returns the "try again" error code
-                    //funny section
-                    console.log(nugget.randomInteger % 1000)
-                    if (nugget.randomInteger % 1000 == 2) {
-                        userChoices.link = "I'm not giving you that";
-                        return "Hi! It's me, The Computer"
-                    }
-                    if (nugget.randomInteger % 1000 == 46) {
-                        userChoices.link = "https://www.tumblr.com/palladium-archive/795441871259336704"
-                    }
+                //funny section
+                if (nugget.randomInteger % 1000 == 2) {
+                    userChoices.link = "I'm not giving you that";
+                    return "Hi! It's me, The Computer"
+                }
+                if (nugget.randomInteger % 1000 == 46) {
+                    userChoices.link = "https://www.tumblr.com/palladium-archive/795441871259336704"
+                }
 
-                    let stringResponse = await apiResponse(nugget, userChoices)
-                    if (stringResponse instanceof Error) { // if response is an error
-                        log.info(nugget.randomInteger, `${stringResponse.name}: ${stringResponse.message}`)
-                        if (stringResponse.message == "fetch failed") {
-                            return "Cobalt API appears to be down right now"
-                        } else {
-                            return `There was an unknown error with the API \n-# ${stringResponse.name}: ${stringResponse.message}`
-                        }
+                let stringResponse = await apiResponse(nugget, userChoices)
+                if (stringResponse instanceof Error) { // if response is an error
+                    log.info(nugget.randomInteger, `${stringResponse.name}: ${stringResponse.message}`)
+                    if (stringResponse.message == "fetch failed") {
+                        return "Cobalt API appears to be down right now"
                     } else {
-                        log.info(nugget.randomInteger, `Before: ${nugget.randomInteger} - ${userChoices.link}`)
-                        userChoices.link = backupEmbed(userChoices.link)
-                        log.info(nugget.randomInteger, `After:  ${nugget.randomInteger} - ${userChoices.link}`)
-                        //nugget.APIstatus = stringResponse['status'];
-                        console.log(nugget.randomInteger, stringResponse)
-                        if (stringResponse['status'] == 'tunnel' || stringResponse['status'] == "redirect") { //all the non-fail API responses
+                        return `There was an unknown error with the API \n-# ${stringResponse.name}: ${stringResponse.message}`
+                    }
+                } else {
+                    userChoices.link = backupEmbed(userChoices.link)
+                    //console.log(nugget.randomInteger, stringResponse)
 
-                            try {
-                                nugget.URL = stringResponse['url']
+                    if (stringResponse['status'] == 'error') { // error
+                        log.api(nugget.randomInteger, stringResponse['error'].code)
+                        if (stringResponse['error'].code == 'error.api.fetch.short_link') {
+                            return `Try a non-shortened link maybe?`
+                        } else if (stringResponse['error'].code == 'error.api.youtube.login') {
+                            return `Youtube hates me right now for some reason \n Try again in a few hours(? idk)`
+                        } else if (stringResponse['error'].code == 'error.api.content.post.age') {
+                            return `The media is age restricted`
+                        } else if (stringResponse['error'].code == 'error.api.link.invalid') {
+                            return `This link is not currently supported`
+                        }
+
+                        else {
+                            return `Cobalt returned an error I havent caught yet: \n\`${stringResponse['error'].code}\``
+                        }
+
+                    } else {
+                        await interaction.editReply(`${loadingEmoji} downloading media..`);
+                        //all the non-fail API responses
+                        console.log(stringResponse)
+                        try {
+                            if (stringResponse['status'] == 'tunnel' || stringResponse['status'] == "redirect") {
                                 // extract the name and type if filename is there
                                 let fileName = stringResponse['filename']
-                                const typeMatch = fileName.substring(fileName.lastIndexOf('.'));; // extract any file type that exists
+                                const typeMatch = fileName.substring(fileName.lastIndexOf('.'));; // extract any file type that existsa
                                 nugget.fileType[0] = typeMatch ? typeMatch : nugget.fileType[0]; // set the file type is one is found
 
                                 if (isTitle(fileName)) { // only run this is the file name is useful for the user
@@ -217,68 +216,25 @@ module.exports = {
                                     console.log(nugget.fileName.match(/^(.*)\(/));
                                 }
 
-                                await interaction.editReply(`${loadingEmoji} downloading media \n-# [here is the download link](<${nugget.URL}>)`);
-                                await downloadMedia(nugget)
-                                nugget.failure = false
-                                return 'Success!'
-                            } catch (videoError) {
-                                console.error(`${nugget.randomInteger} Video Error:`, videoError)
-                                return `media download failed: ${videoError}`
-                            }
-                        }
-                        else if (stringResponse['status'] == 'picker') { // picker means API returned more than one thing
-
-                            try {
-                                await downloadImages(stringResponse['picker'], nugget)
-                                nugget.failure = false
-                                return ("picker? i hardly know her")
-                            } catch (imageError) {
-                                log.error(nugget.randomInteger, `Image Download`, imageError)
-                                return `image download failed: ${imageError}`
+                                // encase it in a picker object to work alongside "picker" objects
+                                stringResponse = { picker: [stringResponse] };
                             }
 
-                        } else if (stringResponse['status'] == 'error') { // error
-                            console.log(stringResponse['error'])
-                            if (stringResponse['error'].code == 'error.api.fetch.short_link') {
-                                return `Try a non-shortened link maybe?`
-                            } else if (stringResponse['error'].code == 'error.api.youtube.login') {
-                                return `Youtube hates me right now for some reason \n Try again in a few hours(? idk)`
-                            } else if (stringResponse['error'].code == 'error.api.content.post.age') {
-                                return `The media is age restricted`
-                            } else if (stringResponse['error'].code == 'error.api.link.invalid') {
-                                return `This link is not currently supported`
-                            }
-
-                            else {
-                                return `Cobalt returned an error I havent caught yet: \n\`${stringResponse['error'].code}\``
-                            }
-
-                        } else { // all the Cobalt API error catching
-                            log.info(nugget.randomInteger, `got to the API else statement; i = ${i}`)
-                            log.warn(nugget.randomInteger, `Cobalt API Returned ${stringResponse['status']}: ${stringResponse['text']}`)
-                            if (stringResponse['text'].includes("i couldn't process your request"))
-                                return `Cobalt couldn't handle your request. Are you sure it's a valid link?`;
-                            else if (stringResponse['text'].includes("cobalt is at capacity"))
-                                return `Cobalt API is at capacity right now. Try again in a few seconds!`
-                            else if (stringResponse['text'].includes("i couldn't connect to the service api"))
-                                return `Couldn't connect to the service API. Check <https://status.cobalt.tools/> and try again`
-                            //the two sections where you probably just need to retry
-                            else if (stringResponse['text'].includes("something went wrong when i tried getting info about your link")) {
-                                if (i == 3)
-                                    return `Tried ${i} times. Cobalt didn't like your link`
-                                continue
-                            }
-                            else
-                                return `Cobalt API returned ${stringResponse['status']}: \n-# ${stringResponse['text']}`
+                            await download(stringResponse, nugget)
+                            nugget.failure = false
+                            return 'Success!'
+                        } catch (mediaError) {
+                            log.error(nugget.randomInteger, `Media Error`, mediaError)
+                            return `media download failed: ${mediaError}`
                         }
                     }
+                    // catchall???
+                    return `Cobalt API returned ${stringResponse['status']}: \n-# ${stringResponse['text']}`
                 }
-                return "my \`for\` loop broke somehow :(((" //im desperately hoping that this never executes but i dont have an easy way to test the "try again" part
 
             };
             nugget.reply = await textResponse()
-            if (nugget.URL != '')
-                await interaction.editReply(`${loadingEmoji} uploading ${nugget.spoilerText}[media](<${userChoices.link}>)${nugget.spoilerText}`);
+            await interaction.editReply(`${loadingEmoji} uploading ${nugget.spoilerText}[media](<${userChoices.link}>)${nugget.spoilerText}`);
 
             let fileAttachments = [];
             let tempArray = [];
