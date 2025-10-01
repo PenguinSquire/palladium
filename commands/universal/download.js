@@ -36,7 +36,7 @@ async function download(wholeObject, nugget) {
         let i = 0;
         for (i = 0; i < pickerObject.length; i++) {
             const imageURL = pickerObject[i].url
-            nugget.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)[0]; //gets the filetype
+            nugget.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)?.[0] ?? '.mp4'; //gets the filetype (if its there)
 
             gimmeGhoul(nugget, reject, imageURL, i)
         }
