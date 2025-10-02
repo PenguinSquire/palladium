@@ -36,7 +36,18 @@ async function download(wholeObject, nugget) {
         let i = 0;
         for (i = 0; i < pickerObject.length; i++) {
             const imageURL = pickerObject[i].url
-            nugget.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)?.[0] ?? '.mp4'; //gets the filetype (if its there)
+
+            //gets the filename(if its there)
+            const fileName = pickerObject[i].filename
+            // extract any file type that exists
+            const typeMatch = fileName?.substring(fileName.lastIndexOf('.')); // ? passes undefined instead of erroring out
+            if (typeMatch) {
+                nugget.fileType[0] = typeMatch // set the file type if one is found
+            } else {
+                // try to look for one in the url??
+                nugget.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)?.[0] ?? '.mp4'; // if no extension found, default to ".mp4"
+            }
+
 
             gimmeGhoul(nugget, reject, imageURL, i)
         }
@@ -201,16 +212,13 @@ module.exports = {
                         console.log(stringResponse)
                         try {
                             if (stringResponse['status'] == 'tunnel' || stringResponse['status'] == "redirect") {
-                                // extract the name and type if filename is there
-                                let fileName = stringResponse['filename']
-                                const typeMatch = fileName.substring(fileName.lastIndexOf('.'));; // extract any file type that existsa
-                                nugget.fileType[0] = typeMatch ? typeMatch : nugget.fileType[0]; // set the file type is one is found
-
-                                if (isTitle(fileName)) { // only run this is the file name is useful for the user
-                                    fileName = typeMatch[0] ? fileName.replace(typeMatch[0], '') : fileName; // set the file name minus the type
-                                    const dataMatch = fileName.match(/^(.*)\(/); // extract any extra data that exists
-                                    nugget.fileName = dataMatch ? dataMatch[1].trimEnd() : fileName; // remove the extra data from the end from Cobalt
-                                    console.log(nugget.fileName.match(/^(.*)\(/));
+                                // extract the name of the file
+                                const fileName = stringResponse['filename'];
+                                const title = fileName.substring(0, fileName.lastIndexOf('.'));
+                                if (isTitle(title)) { // only run this is the file name is useful for the user
+                                    const dataMatch = title.match(/^(.*)\(/); // extract any extra data that exists
+                                    nugget.fileName = dataMatch ? dataMatch[1].trimEnd() : title; // remove the extra data at the end from Cobalt
+                                    console.log(nugget.fileName);
                                 }
 
                                 // encase it in a picker object to work alongside "picker" objects
