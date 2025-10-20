@@ -32,59 +32,80 @@ const apiResponse = async (nugget, userChoices) => {
 async function download(wholeObject, nugget) {
     console.log(wholeObject)
     let pickerObject = wholeObject['picker']
-    return new Promise((resolve, reject) => {
-        let i = 0;
-        for (i = 0; i < pickerObject.length; i++) {
-            const imageURL = pickerObject[i].url
 
-            //gets the filename(if its there)
-            const fileName = pickerObject[i].filename
-            // extract any file type that exists
-            const typeMatch = fileName?.substring(fileName.lastIndexOf('.')); // ? passes undefined instead of erroring out
-            if (typeMatch) {
-                nugget.fileType[0] = typeMatch // set the file type if one is found
-            } else {
-                // try to look for one in the url??
-                nugget.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)?.[0] ?? '.mp4'; // if no extension found, default to ".mp4"
-            }
+    // list of promises we gotta wait for
+    const downloadPromises = [];
 
+    let i = 0;
+    for (i = 0; i < pickerObject.length; i++) {
+        const imageURL = pickerObject[i].url
 
-            gimmeGhoul(nugget, reject, imageURL, i)
+        //gets the filename(if its there)
+        const fileName = pickerObject[i].filename
+        // extract any file type that exists
+        const typeMatch = fileName?.substring(fileName.lastIndexOf('.')); // ? passes undefined instead of erroring out
+        if (typeMatch) {
+            nugget.fileType[i] = typeMatch // set the file type if one is found
+        } else {
+            // try to look for one in the url??
+            nugget.fileType[i] = imageURL.match(/\.([^.]*?)(?=\?|#|$)/)?.[0] ?? nugget.fileType[i]; // if no extension found, default to ".mp4"
         }
-        // if they want the audio and it exists
-        if (nugget.optionalAudio && typeof wholeObject["audio"] != "undefined") {
-            nugget.fileType[i] = ".mp3"
-            gimmeGhoul(nugget, reject, wholeObject["audio"], i)
-        }
-        log.info(nugget.randomInteger, `${nugget.totalFiles} Files downloaded successfully`);
-        setTimeout(() => { // gives extra time before resolving
-            resolve(); // resolve has to get extra time for images because there's more than one im pretty sure
-        }, 5000);
-    });
+        // push the promise returned by gimmeGhoul
+        downloadPromises.push(gimmeGhoul(nugget, imageURL, i));
+    }
+    // if optional audio exists and they want it
+    if (nugget.optionalAudio && typeof wholeObject["audio"] != "undefined") {
+        nugget.fileType[i] = ".mp3"
+        // push the promise returned by gimmeGhoul
+        downloadPromises.push(gimmeGhoul(nugget, wholeObject["audio"], i));
+    }
+
+    // wait for every download to finish
+    await Promise.all(downloadPromises);
+
+    log.info(nugget.randomInteger, `${nugget.totalFiles} Files downloaded successfully`);
 }
-function gimmeGhoul(nugget, reject, imageURL, i = 0) {
-    const destination = nugget.fileLocation + i + nugget.fileType[i]
-    const file = fs.createWriteStream(destination);
 
-    const protocol = imageURL.startsWith('https') ? https : http;
-    protocol.get(imageURL, (response) => {
-        response.pipe(file);
-        file.on('finish', () => {
-            file.close(() => {
-                const fileStats = fs.statSync(destination);
-                const fileSize = fileStats.size;
-                console.info(`File: ${destination} created with size: ${fileSize}`);
-                if (fileSize == 0) {
-                    fs.unlinkSync(destination); // clean up
-                    return reject("returned 0 byte file");
-                }
-                nugget.totalFiles++
+
+function gimmeGhoul(nugget, imageURL, i = 0) {
+    return new Promise((resolve, reject) => {
+        const destination = nugget.fileLocation + i + nugget.fileType[i]
+        const file = fs.createWriteStream(destination);
+        const protocol = imageURL.startsWith('https') ? https : http;
+
+        const timeout = setTimeout(() => {
+            file.destroy();
+            try { fs.unlinkSync(destination); } catch { }
+            reject(new Error(`Download timed out after 30 seconds`));
+        }, 30000);
+
+        protocol.get(imageURL, (response) => {
+            response.pipe(file);
+
+            file.on('finish', () => {
+                file.close(() => {
+                    clearTimeout(timeout);
+                    try {
+                        const fileStats = fs.statSync(destination);
+                        const fileSize = fileStats.size;
+                        console.info(`File: ${destination} created with size: ${fileSize}`);
+                        if (fileSize == 0) {
+                            fs.unlinkSync(destination); // clean up
+                            return reject(new Error(`returned 0 byte file`));
+                        }
+                        nugget.totalFiles++
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
             });
-        });
-    }).on('error', (err) => {
-        fs.unlink(destination, () => {
-            log.error(nugget.randomInteger, 'Error downloading files:', err);
-            return reject(err);
+        }).on('error', (err) => {
+            clearTimeout(timeout);
+            fs.unlink(destination, () => {
+                log.error(nugget.randomInteger, 'Error downloading files:', err);
+                reject(err);
+            });
         });
     });
 }
@@ -159,6 +180,12 @@ module.exports = {
             userChoices.audioOnly = 'audio' // only download audio
             nugget.fileType[0] = ".mp3"
         }
+
+        if (interaction.options.getBoolean('spoiler')) {
+            nugget.fileLocation = `tempFiles/SPOILER_${randInt}_temp`
+            nugget.spoilerText = '||'
+        }
+
         nugget.optionalAudio = interaction.options.getBoolean('extra-audio') ?? true;
         userChoices.quality = interaction.options.getString('quality') ?? '720';
 
@@ -172,10 +199,12 @@ module.exports = {
                 //funny section
                 if (nugget.randomInteger % 1000 == 2) {
                     userChoices.link = "I'm not giving you that";
+                    log.egg(nugget.randomInteger, `not doing that`)
                     return "Hi! It's me, The Computer"
                 }
                 if (nugget.randomInteger % 1000 == 46) {
                     userChoices.link = "https://www.tumblr.com/palladium-archive/795441871259336704"
+                    log.egg(nugget.randomInteger, `annoying dog`)
                 }
 
                 let stringResponse = await apiResponse(nugget, userChoices)
@@ -192,19 +221,23 @@ module.exports = {
 
                     if (stringResponse['status'] == 'error') { // error
                         log.api(nugget.randomInteger, stringResponse['error'].code)
-                        if (stringResponse['error'].code == 'error.api.fetch.short_link') {
-                            return `Try a non-shortened link maybe?`
-                        } else if (stringResponse['error'].code == 'error.api.youtube.login') {
-                            return `Youtube hates me right now for some reason \n Try again in a few hours(? idk)`
-                        } else if (stringResponse['error'].code == 'error.api.content.post.age') {
-                            return `The media is age restricted`
-                        } else if (stringResponse['error'].code == 'error.api.link.invalid') {
-                            return `This link is not currently supported`
-                        }
 
-                        else {
-                            return `Cobalt returned an error I havent caught yet: \n\`${stringResponse['error'].code}\``
+                        let message = `Cobalt returned an error I havent caught yet: \n\`${stringResponse['error'].code}\``
+
+                        if (stringResponse['error'].code == 'error.api.fetch.short_link') {
+                            message = `Try a non-shortened link maybe?`
+                        } else if (stringResponse['error'].code == 'error.api.youtube.login') {
+                            message = `Youtube thinks I am a bot\n Try again in a few hours maybe(?)`
+                        } else if (stringResponse['error'].code == 'error.api.content.post.age') {
+                            message = `The media is age restricted and cannot be accessed`
+                        } else if (stringResponse['error'].code == 'error.api.link.invalid') {
+                            message = `This link is not currently supported`
+                        } else if (stringResponse['error'].code == 'error.api.content.video.unavailable') {
+                            message = `The media was unavialable\n-# usually, this means it is member-exclusive`
+                        } else if (stringResponse['error'].code == 'error.api.fetch.empty') {
+                            message = `Cobalt returned an empty file\n-# This usually means the platform thinks I'm a bot`
                         }
+                        return message
 
                     } else {
                         await interaction.editReply(`${loadingEmoji} downloading media..`);
@@ -230,13 +263,12 @@ module.exports = {
                             return 'Success!'
                         } catch (mediaError) {
                             log.error(nugget.randomInteger, `Media Error`, mediaError)
-                            return `media download failed: ${mediaError}`
+                            return `media download failed: ${mediaError.message}`
                         }
                     }
                     // catchall???
                     return `Cobalt API returned ${stringResponse['status']}: \n-# ${stringResponse['text']}`
                 }
-
             };
             nugget.reply = await textResponse()
             await interaction.editReply(`${loadingEmoji} uploading ${nugget.spoilerText}[media](<${userChoices.link}>)${nugget.spoilerText}`);
