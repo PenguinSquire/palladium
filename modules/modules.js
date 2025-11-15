@@ -1,8 +1,10 @@
 const { ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const sendLog = require("./log.js")
+const writeLog = require("./log_depricated.js")
 module.exports = {
     log: sendLog,
+    log_depricated: writeLog,
     button,
     regexEscape,
     backupEmbed,
