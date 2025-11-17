@@ -25,6 +25,7 @@ const apiResponse = async (nugget, userChoices) => {
         .then(response => JSON.parse(response))
         .catch(err => {
             log.error(nugget.randomInteger, `API error:`, err);
+            log.done(nugget.randomInteger)
             return 'Error:', err;
         });
 }
@@ -190,8 +191,9 @@ module.exports = {
         userChoices.quality = interaction.options.getString('quality') ?? '720';
 
         try {
-            if (!isValidUrl(userChoices.link))
+            if (!isValidUrl(userChoices.link)) {
                 return interaction.editReply(`\"\`\`${nugget.spoilerText}${userChoices.link}${nugget.spoilerText}\`\`\" is not a valid link`);
+            }
 
             log.link(nugget.randomInteger, userChoices.link)
 
@@ -211,8 +213,10 @@ module.exports = {
                 if (stringResponse instanceof Error) { // if response is an error
                     log.info(nugget.randomInteger, `${stringResponse.name}: ${stringResponse.message}`)
                     if (stringResponse.message == "fetch failed") {
+                        log.done(nugget.randomInteger)
                         return "Cobalt API appears to be down right now"
                     } else {
+                        log.done(nugget.randomInteger)
                         return `There was an unknown error with the API \n-# ${stringResponse.name}: ${stringResponse.message}`
                     }
                 } else {
@@ -231,12 +235,15 @@ module.exports = {
                         } else if (stringResponse['error'].code == 'error.api.content.post.age') {
                             message = `The media is age restricted and cannot be accessed`
                         } else if (stringResponse['error'].code == 'error.api.link.invalid') {
-                            message = `This link is not currently supported`
+                            message = `This link is not a valid link for Cobalt`
+                        } else if (stringResponse['error'].code == 'error.api.link.unsupported') {
+                            message = `This is not currently supported by Cobalt`
                         } else if (stringResponse['error'].code == 'error.api.content.video.unavailable') {
                             message = `The media was unavialable\n-# usually, this means it is member-exclusive`
                         } else if (stringResponse['error'].code == 'error.api.fetch.empty') {
                             message = `Cobalt returned an empty file\n-# This usually means the platform thinks I'm a bot`
                         }
+                        log.done(nugget.randomInteger)
                         return message
 
                     } else {
@@ -263,6 +270,7 @@ module.exports = {
                             return 'Success!'
                         } catch (mediaError) {
                             log.error(nugget.randomInteger, `Media Error`, mediaError)
+                            log.done(nugget.randomInteger)
                             return `media download failed: ${mediaError.message}`
                         }
                     }
@@ -323,6 +331,7 @@ module.exports = {
                         log.info(nugget.randomInteger, `File doesn't exist, won't remove it.`);
                     else if (err) // other errors, e.g. maybe we don't have enough permission
                         log.error(nugget.randomInteger, `Error occurred while trying to remove file at ` + nugget.fileLocation + i + nugget.fileType[i], err);
+                    log.done(nugget.randomInteger)
                 });
             }
         }

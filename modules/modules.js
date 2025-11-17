@@ -1,8 +1,10 @@
 const { ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const sendLog = require("./log.js")
+const writeLog = require("./log_depricated.js")
 module.exports = {
     log: sendLog,
+    log_depricated: writeLog,
     button,
     regexEscape,
     backupEmbed,
@@ -40,8 +42,8 @@ function backupEmbed(link) {
         search = ''
     } else if (host.includes("twitter")) {
         host = host.replace("twitter", "vxtwitter")
-    } else if (host.includes("x.com")) {
-        host = host.replace("x.com", "vxtwitter")
+    } else if (host == "x.com") {
+        host = host.replace("x.com", "vxtwitter.com")
     }
     let newLink = protocol + '//' + host + pathname + search
     return newLink
