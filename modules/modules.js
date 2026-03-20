@@ -34,11 +34,11 @@ function backupEmbed(link) {
     let search = url.search;
     //console.log(url)
     if (host.includes("instagram")) {
-        host = host.replace("instagram", "instagram") // kkinstagram works but it redirects to a scam site
+        host = host.replace("instagram", "kkinstagram") // kkinstagram works but it redirects to a scam site
         search = ''
     } else if (host.includes("tiktok")) {
         // tfxtok was worse than just normal tiktok embeds
-        //host = host.replace("tiktok", "tfxktok")
+        host = host.replace("tiktok", "tfxktok")
         search = ''
     } else if (host.includes("twitter")) {
         host = host.replace("twitter", "vxtwitter")
